@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 import backgroundImage from "../../assets/NEW_BACKGROUND.jpg";
+import logoImage from "../../assets/Logo.avif";
 import { login } from "../../store/slices/authSlice";
 
 const LoginPage = () => {
@@ -108,11 +109,15 @@ const LoginPage = () => {
     >
       <div className="absolute inset-0 bg-slate-950/25" />
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-sm shadow-2xl p-8 sm:p-10">
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-sm shadow-2xl py-6 px-6 sm:py-8 sm:px-10">
         {/* Project Name */}
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-            <i className="bx bxs-book-open text-3xl text-blue-600"></i>
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border border-blue-100 shadow-sm flex items-center justify-center mx-auto mb-3 overflow-hidden">
+            <img
+              src={logoImage}
+              alt="Pravah Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
 
           <h1 className="text-3xl font-bold text-blue-700">Pravah</h1>
@@ -121,7 +126,7 @@ const LoginPage = () => {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div>
             <label

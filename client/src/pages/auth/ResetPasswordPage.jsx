@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import backgroundImage from "../../assets/NEW_BACKGROUND.jpg";
 import { resetPassword } from "../../store/slices/authSlice";
 
 const ResetPasswordPage = () => {
@@ -94,11 +95,18 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 sm:p-10">
+    <div
+      className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 sm:px-6 lg:px-8"
+      style={{
+        backgroundImage: `url(${backgroundImage})`,
+      }}
+    >
+      <div className="absolute inset-0 bg-slate-950/25" />
+
+      <div className="relative z-10 w-full max-w-md bg-white/90 rounded-2xl shadow-2xl p-8 sm:p-10">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-3">
-            <i className="bx bxs-book-open text-3xl text-blue-600"></i>
+          <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+            <i className="bx bx-lock-open-alt text-3xl text-indigo-600"></i>
           </div>
 
           <h1 className="text-3xl font-bold text-blue-700">
