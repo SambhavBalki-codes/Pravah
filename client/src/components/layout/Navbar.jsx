@@ -1,11 +1,22 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../store/slices/authSlice";
+import logoImage from "../../assets/Logo.avif";
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { authUser } = useSelector((state) => state.auth);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout()).then(() => {
+      navigate("/login");
+    });
+  };
 
   const getInitials = (name) => {
     return (
@@ -55,24 +66,14 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             {/* Logo and title */}
             <div className="flex items-center ml-4">
               <div className="flex-shrink-0 flex items-center">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                    />
-                  </svg>
-                </div>
+                <img
+                  src={logoImage}
+                  alt="Pravah Logo"
+                  className="h-14 w-14 rounded-lg object-cover border border-slate-200"
+                />
                 <div className="ml-3 hidden sm:block">
-                  <h1 className="text-lg font-semibold text-slate-800">
-                    Final Year Project Management System
+                  <h1 className="text-[1.8rem] font-bold tracking-wide text-slate-800">
+                    Pravah
                   </h1>
                 </div>
               </div>
@@ -80,7 +81,28 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
 
           {/* Right side */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden sm:inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium text-slate-700 bg-slate-100 border border-slate-200 rounded-full hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200 shadow-sm"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                />
+              </svg>
+              Sign out
+            </button>
+
             {/* Profile dropdown */}
             <div className="relative">
               <button
@@ -132,6 +154,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                     </div>
                     <button
                       className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mt-2"
+                      onClick={handleLogout}
                     >
                       Sign out
                     </button>

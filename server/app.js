@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import dns from "dns";
 import { errorMiddleware } from "./middlewares/error.js";
 import authRouter from "./router/userRoutes.js";
+import adminRouter from "./router/adminRoutes.js";
 
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
@@ -25,5 +26,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/auth", authRouter); // auth routes
+app.use("/api/v1/admin", adminRouter);
 app.use(errorMiddleware); // error middleware
 export default app;

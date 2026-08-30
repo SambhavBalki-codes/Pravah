@@ -12,61 +12,64 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl) {
       <body style="
         margin: 0;
         padding: 0;
-        background-color: #f4f7fb;
+        background-color: #f8fafc;
         font-family: Arial, Helvetica, sans-serif;
-        color: #1f2937;
+        color: #0f172a;
       ">
 
         <div style="
-          max-width: 600px;
+          max-width: 620px;
           margin: 40px auto;
           background-color: #ffffff;
-          border: 1px solid #e5e7eb;
-          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
           overflow: hidden;
+          box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
         ">
 
           <!-- Header -->
           <div style="
             padding: 28px 40px;
-            background-color: #111827;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             text-align: center;
           ">
 
             <h1 style="
               margin: 0;
               color: #ffffff;
-              font-size: 28px;
+              font-size: 30px;
               letter-spacing: 1px;
+              font-weight: 700;
             ">
               Pravah
             </h1>
 
             <p style="
               margin: 8px 0 0;
-              color: #d1d5db;
+              color: #cbd5e1;
               font-size: 14px;
+              letter-spacing: 0.08em;
             ">
-              Learn. Manage. Grow.
+              LEARN • MANAGE • GROW
             </p>
 
           </div>
 
-
           <!-- Main Content -->
-          <div style="padding: 40px;">
+          <div style="padding: 38px 40px 30px;">
 
             <h2 style="
-              margin: 0 0 20px;
-              color: #111827;
-              font-size: 24px;
+              margin: 0 0 18px;
+              color: #0f172a;
+              font-size: 26px;
+              font-weight: 700;
             ">
               Password Reset Request
             </h2>
 
             <p style="
               margin: 0 0 16px;
-              color: #4b5563;
+              color: #475569;
               font-size: 15px;
               line-height: 1.7;
             ">
@@ -74,72 +77,65 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl) {
             </p>
 
             <p style="
-              margin: 0 0 20px;
-              color: #4b5563;
+              margin: 0 0 18px;
+              color: #475569;
               font-size: 15px;
               line-height: 1.7;
             ">
-              We received a request to reset the password associated
-              with your Pravah account.
+              We received a request to reset the password associated with your Pravah account.
             </p>
 
             <p style="
               margin: 0 0 28px;
-              color: #4b5563;
+              color: #475569;
               font-size: 15px;
               line-height: 1.7;
             ">
-              Click the button below to create a new password for your account.
+              Click the button below to create a new password and continue securely.
             </p>
 
-
-            <!-- Reset Password Button -->
             <div style="
               text-align: center;
-              margin: 32px 0;
+              margin: 30px 0;
             ">
-
               <a
                 href="${resetPasswordUrl}"
                 style="
                   display: inline-block;
-                  padding: 14px 30px;
-                  background-color: #111827;
+                  padding: 15px 30px;
+                  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
                   color: #ffffff;
                   text-decoration: none;
-                  border-radius: 8px;
+                  border-radius: 10px;
                   font-size: 15px;
-                  font-weight: bold;
+                  font-weight: 700;
+                  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
                 "
               >
                 Reset Password
               </a>
-
             </div>
 
-
-            <!-- Fallback Link -->
             <p style="
               margin: 0 0 10px;
-              color: #6b7280;
+              color: #64748b;
               font-size: 13px;
               line-height: 1.6;
             ">
-              If the button above doesn't work, copy and paste the
-              following link into your browser:
+              If the button above does not work, copy and paste this link into your browser:
             </p>
 
             <div style="
-              padding: 12px;
-              background-color: #f3f4f6;
-              border-radius: 6px;
+              padding: 14px 16px;
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
               margin-bottom: 28px;
             ">
-
               <a
                 href="${resetPasswordUrl}"
                 style="
-                  color: #374151;
+                  color: #1e3a8a;
                   font-size: 13px;
                   line-height: 1.6;
                   word-break: break-all;
@@ -147,45 +143,39 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl) {
               >
                 ${resetPasswordUrl}
               </a>
-
             </div>
 
-
-            <!-- Security Information -->
             <p style="
               margin: 0 0 12px;
-              color: #6b7280;
+              color: #64748b;
               font-size: 14px;
               line-height: 1.6;
             ">
-              For your security, this password-reset link will expire
-              after a limited period of time.
+              For your security, this reset link is time-sensitive and should be used promptly.
             </p>
 
             <p style="
               margin: 0;
-              color: #6b7280;
+              color: #64748b;
               font-size: 14px;
               line-height: 1.6;
             ">
-              If you did not request a password reset, you can safely
-              ignore this email. Your account will remain secure.
+              If you did not request this change, you can safely ignore this email and your account will remain secure.
             </p>
 
           </div>
 
-
           <!-- Footer -->
           <div style="
-            padding: 24px 40px;
-            background-color: #f9fafb;
-            border-top: 1px solid #e5e7eb;
+            padding: 22px 40px 28px;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
             text-align: center;
           ">
 
             <p style="
               margin: 0 0 8px;
-              color: #6b7280;
+              color: #64748b;
               font-size: 13px;
             ">
               This is an automated message from Pravah.
@@ -193,7 +183,7 @@ export function generateForgotPasswordEmailTemplate(resetPasswordUrl) {
 
             <p style="
               margin: 0;
-              color: #9ca3af;
+              color: #94a3b8;
               font-size: 12px;
             ">
               © ${new Date().getFullYear()} Pravah. All rights reserved.

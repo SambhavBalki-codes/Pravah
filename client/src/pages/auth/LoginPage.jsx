@@ -81,24 +81,19 @@ const LoginPage = () => {
   // Redirect after successful login
   useEffect(() => {
     if (authUser) {
-      switch (formData.role) {
-        case "Student":
-          navigate("/student/dashboard");
-          break;
+      const role = authUser.role?.toLowerCase();
 
-        case "Teacher":
-          navigate("/teacher/dashboard");
-          break;
-
-        case "Admin":
-          navigate("/admin/dashboard");
-          break;
-
-        default:
-          navigate("/login");
+      if (role === "student") {
+        navigate("/student");
+      } else if (role === "teacher") {
+        navigate("/teacher");
+      } else if (role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/login");
       }
     }
-  }, [authUser, formData.role, navigate]);
+  }, [authUser, navigate]);
 
   return (
     <div
