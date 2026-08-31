@@ -33,6 +33,7 @@ import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
 import { ToastContainer } from "react-toastify";
+import { getAllUsers } from "./store/slices/adminSlice";
 
 const App = () => {
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
@@ -42,6 +43,12 @@ const App = () => {
   useEffect(() => {
     dispatch(getUser());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (authUser?.role === "Admin") {
+      dispatch(getAllUsers());
+    }
+  }, [authUser, dispatch]);
 
   //protected routes based on user role
   const ProtectedRoute = ({ children, allowedRoles }) => {

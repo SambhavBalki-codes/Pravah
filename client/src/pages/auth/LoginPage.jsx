@@ -106,18 +106,20 @@ const LoginPage = () => {
 
       <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-sm shadow-2xl py-6 px-6 sm:py-8 sm:px-10">
         {/* Project Name */}
-        <div className="text-center mb-6">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white border border-blue-100 shadow-sm flex items-center justify-center mx-auto mb-3 overflow-hidden">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-blue-100 bg-white shadow-sm sm:h-32 sm:w-32">
             <img
               src={logoImage}
               alt="Pravah Logo"
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           </div>
 
           <h1 className="text-3xl font-bold text-blue-700">Pravah</h1>
 
-          <p className="mt-2 text-gray-500 text-base">Login to continue</p>
+          <p className="mt-2 text-sm font-medium tracking-[0.12em] text-slate-500 uppercase">
+            create lead grow
+          </p>
         </div>
 
         {/* Login Form */}
@@ -243,18 +245,6 @@ const LoginPage = () => {
             Forgot your password?
           </Link>
         </div>
-
-        {/* Register */}
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Don't have an account?{" "}
-          <button
-            type="button"
-            onClick={() => navigate("/register")}
-            className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
-          >
-            Create account
-          </button>
-        </p>
       </div>
     </div>
   );

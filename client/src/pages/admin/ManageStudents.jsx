@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Plus,
@@ -14,7 +14,6 @@ import AddStudent from "../../components/modal/AddStudent";
 import {
   createStudent,
   deleteStudent,
-  getAllUsers,
   updateStudent,
 } from "../../store/slices/adminSlice";
 import { toggleStudentModal } from "../../store/slices/popupSlice";
@@ -37,11 +36,6 @@ const ManageStudents = () => {
   });
 
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getAllUsers());
-  }, [dispatch]);
-
   const students = useMemo(() => {
     const studentUsers = (users || []).filter(
       (user) => user.role?.toLowerCase() === "student",
