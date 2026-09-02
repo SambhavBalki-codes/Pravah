@@ -4,7 +4,13 @@ import ErrorHandler from "../middlewares/error.js";
 import User from "../models/user.js";
 
 export const isAuthenticated = asyncHandler(async (req, res, next) => {
-  const { token } = req.cookies;
+  const cookieToken = req.cookies?.token;
+  const authorization = req.headers.authorization;
+  const bearerToken = authorization?.startsWith("Bearer ")
+    ? authorization.slice(7)
+    : null;
+  const token = bearerToken || cookieToken;
+
   if (!token) {
     return next(new ErrorHandler("Please login to access this resource", 401));
   }

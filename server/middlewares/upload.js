@@ -5,7 +5,6 @@ import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadDir = path.join(__dirname, "../uploads");
 
 const ensureDirExists = (dir) => {
   if (!fs.existsSync(dir)) {
@@ -13,14 +12,25 @@ const ensureDirExists = (dir) => {
   }
 };
 
-ensureDirExists(uploadDir);
-
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const projectDir = path.join(uploadDir, "projects");
-    ensureDirExists(projectDir);
-    cb(null, projectDir);
+  desination: (req, file, cb) => {
+    let uploadPath;
+    if (req.route.path.includes("/upload/:projectID")) {
+      uploadPath = path.join(
+        __dirname,
+        "../uploads/projects",
+        req.params.projectID,
+      );
+    } else if (req.route.path.includes("/upload/:userID")) {
+      uploadPath = path.join(__dirname, "../uploads/users", req.params.userID);
+    } else {
+      uploadPath = path.join(__dirname, "../uploads/temp");
+    }
+
+    ensureDirExists(uploadPath);
+    cb(null, uploadPath);
   },
+
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
@@ -33,20 +43,54 @@ const fileFilter = (req, file, cb) => {
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/zip",
+    "application/x-zip-compressed",
+    "application/x-rar-compressed",
+    "application/x-rar",
+    "application/vnd.rar",
+    "application/octet-stream",
     "image/jpeg",
     "image/png",
-    "image/jpg",
+    "image/gif",
+    "text/plain",
+    "application/javascript",
+    "text/css",
+    "text/html",
+    "application/json",
   ];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  const allowedExtensions = [
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".ppt",
+    ".pptx",
+    ".zip",
+    ".rar",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".txt",
+    ".js",
+    ".css",
+    ".html",
+    ".json",
+  ];
+
+  const fileExtension = path.extname(file.originalname).toLowerCase();
+
+  if (
+    allowedTypes.includes(file.mimetype) &&
+    allowedExtensions.includes(fileExtension)
+  ) {
     cb(null, true);
   } else {
     cb(
       new Error(
-        "Unsupported file type. Please upload PDF, Word, Excel, ZIP, or image files.",
+        "Invalid file type. Only PDF, DOC, DOCX, PPT, PPTX, ZIP, RAR, JPG, JPEG, PNG, GIF, TXT, JS, CSS, HTML and JSON files are allowed.",
       ),
       false,
     );
@@ -55,43 +99,35 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({
   storage,
+  fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: 10 * 1024 * 1024, // 10 MB
     files: 10,
   },
-  fileFilter,
 });
 
-export const handleFileUploadErrors = (error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === "LIMIT_FILE_COUNT") {
+const handleFileUploadErrors = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
         success: false,
-        message: "You can upload up to 10 files at a time.",
+        message: "File size exceeds the limit of 10MB",
       });
     }
-
-    if (error.code === "LIMIT_FILE_SIZE") {
+    if (err.code === "LIMIT_FILE_COUNT") {
       return res.status(400).json({
         success: false,
-        message: "File too large. Maximum size is 10MB per file.",
+        message: "File count exceeds the limit of 10 files",
       });
     }
-
+  }
+  if (err.message || err.message.includes("Invalid file type")) {
     return res.status(400).json({
       success: false,
-      message: error.message,
+      message: err.message,
     });
   }
-
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-
   next();
 };
 
-export default upload;
+export { upload, handleFileUploadErrors };

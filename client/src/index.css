@@ -190,7 +190,7 @@
   }
 
   .fade-in {
-    @apply animate-in fade-in duration-200;
+    @apply animate-in duration-200;
   }
 
   .slide-in {

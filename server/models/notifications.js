@@ -47,4 +47,5 @@ const notificationSchema = new mongoose.Schema(
 notificationSchema.index({ user: 1, isRead: 1 });
 
 export const Notification =
-  mongoose.models.Project || mongoose.model("Project", notificationSchema);
+  mongoose.models.Notification ||
+  mongoose.model("Notification", notificationSchema);

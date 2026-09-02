@@ -4,12 +4,14 @@ import {
   submitProposal,
   uploadFiles,
   getAvailableSupervisors,
+  requestSupervisor,
+  getSupervisor,
 } from "../controllers/studentController.js";
 import {
   isAuthenticated,
   isAuthorized,
 } from "../middlewares/authMiddleware.js";
-import upload, { handleFileUploadErrors } from "../middlewares/upload.js";
+import { upload, handleFileUploadErrors } from "../middlewares/upload.js";
 
 const router = express.Router();
 
@@ -38,6 +40,19 @@ router.get(
   isAuthenticated,
   isAuthorized("Student"),
   getAvailableSupervisors,
+);
+router.post(
+  "/request-supervisor",
+  isAuthenticated,
+  isAuthorized("Student"),
+  requestSupervisor,
+);
+
+router.get(
+  "/getSupervisor",
+  isAuthenticated,
+  isAuthorized("Student"),
+  getSupervisor,
 );
 
 export default router;

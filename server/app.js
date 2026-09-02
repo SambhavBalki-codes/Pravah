@@ -7,10 +7,17 @@ import { errorMiddleware } from "./middlewares/error.js";
 import authRouter from "./router/userRoutes.js";
 import adminRouter from "./router/adminRoutes.js";
 import studentRouter from "./router/studentRoutes.js";
+import { fileURLToPath } from "url";
+import path, { dirname } from "path";
+import fs from "fs";
 
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 
 app.use(
@@ -20,6 +27,17 @@ app.use(
     credentials: true,
   }),
 );
+
+const uploadsDir = path.join(__dirname, "../uploads");
+const tempDir = path.join(__dirname, "temp");
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
 
 app.use(cookieParser());
 app.use(express.json());

@@ -2,7 +2,6 @@ import { NavLink, useLocation } from "react-router-dom";
 
 const Sidebar = ({ open, setOpen, userRole }) => {
   const location = useLocation();
-
   const getNavigationItems = () => {
     switch (userRole) {
       case "Student":
@@ -289,7 +288,6 @@ const Sidebar = ({ open, setOpen, userRole }) => {
         <div className="flex flex-col h-full">
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
               const isRootMenuItem =
                 item.path === "/student" ||
                 item.path === "/teacher" ||
@@ -315,7 +313,7 @@ const Sidebar = ({ open, setOpen, userRole }) => {
                   }}
                 >
                   <div className="flex-shrink-0">
-                    {getIcon(item.icon, isActive)}
+                    {getIcon(item.icon, location.pathname === item.path)}
                   </div>
                   <span
                     className={`ml-3 font-medium transition-opacity duration-300 ${
@@ -358,12 +356,16 @@ const Sidebar = ({ open, setOpen, userRole }) => {
         <div className="flex flex-col h-full pt-16">
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isRootMenuItem =
+                item.path === "/student" ||
+                item.path === "/teacher" ||
+                item.path === "/admin";
 
               return (
                 <NavLink
                   key={item.path}
                   to={item.path}
+                  end={isRootMenuItem}
                   className={({ isActive }) => `
               flex items-center px-4 py-3 rounded-lg transition-all duration-200
               ${
@@ -375,7 +377,7 @@ const Sidebar = ({ open, setOpen, userRole }) => {
                   onClick={() => setOpen(false)}
                 >
                   <div className="flex-shrink-0">
-                    {getIcon(item.icon, isActive)}
+                    {getIcon(item.icon, location.pathname === item.path)}
                   </div>
                   <span className="ml-3 font-medium">{item.name}</span>
                 </NavLink>

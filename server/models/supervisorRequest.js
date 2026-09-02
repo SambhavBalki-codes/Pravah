@@ -32,4 +32,5 @@ supervisorRequestSchema.index({ supervisor: 1 });
 supervisorRequestSchema.index({ status: 1 });
 
 export const supervisorRequest =
-  mongoose.models.Project || mongoose.model("Project", supervisorRequestSchema);
+  mongoose.models.SupervisorRequest ||
+  mongoose.model("SupervisorRequest", supervisorRequestSchema);
