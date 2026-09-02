@@ -79,9 +79,9 @@ const projectSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexing for better query performance
-projectSchema.index({ student: 1 }); // when we search for projects by student
-projectSchema.index({ supervisor: 1 }); // when we search for projects by supervisor
-projectSchema.index({ status: 1 }); // when we search for projects by status
+projectSchema.index({ student: 1 });
+projectSchema.index({ supervisor: 1 });
+projectSchema.index({ status: 1 });
 
-export const Project = mongoose.models.Project || mongoose.model("Project", projectSchema);
+export const Project =
+  mongoose.models.Project || mongoose.model("Project", projectSchema);

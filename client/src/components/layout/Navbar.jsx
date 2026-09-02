@@ -32,9 +32,7 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
     <nav className="bg-white shadow-sm border-b border-slate-200 fixed w-full top-0 z-30">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Left side */}
           <div className="flex items-center">
-            {/* Sidebar toggle */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -63,7 +61,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               </svg>
             </button>
 
-            {/* Logo and title */}
             <div className="flex items-center ml-4">
               <div className="flex-shrink-0 flex items-center">
                 <img
@@ -80,7 +77,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
             </div>
           </div>
 
-          {/* Right side */}
           <div className="flex items-center space-x-3">
             <button
               type="button"
@@ -103,7 +99,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
               Sign out
             </button>
 
-            {/* Profile dropdown */}
             <div className="relative">
               <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
@@ -137,7 +132,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                 </svg>
               </button>
 
-              {/* Profile dropdown menu */}
               {profileDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-50">
                   <div className="p-2">
@@ -166,7 +160,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
         </div>
       </div>
 
-      {/* Click outside handlers */}
       {(profileDropdownOpen || notificationsOpen) && (
         <div
           className="fixed inset-0 z-40"

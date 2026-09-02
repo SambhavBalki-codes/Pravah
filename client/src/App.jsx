@@ -2,37 +2,27 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser } from "./store/slices/authSlice";
-
-// Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-
-// Dashboard Layouts
 import DashboardLayout from "./components/layout/DashboardLayout";
-
-// Student Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
 import SubmitProposal from "./pages/student/SubmitProposal";
 import UploadFiles from "./pages/student/UploadFiles";
 import SupervisorPage from "./pages/student/SupervisorPage";
 import FeedbackPage from "./pages/student/FeedbackPage";
 import NotificationsPage from "./pages/student/NotificationsPage";
-
-// Teacher Pages
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import PendingRequests from "./pages/teacher/PendingRequests";
 import AssignedStudents from "./pages/teacher/AssignedStudents";
 import TeacherFiles from "./pages/teacher/TeacherFiles";
-
-// Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageStudents from "./pages/admin/ManageStudents";
 import ManageTeachers from "./pages/admin/ManageTeachers";
 import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
-import { ToastContainer } from "react-toastify";
+import { Slide, ToastContainer } from "react-toastify";
 import { getAllUsers } from "./store/slices/adminSlice";
 
 const App = () => {
@@ -50,7 +40,6 @@ const App = () => {
     }
   }, [authUser, dispatch]);
 
-  //protected routes based on user role
   const ProtectedRoute = ({ children, allowedRoles }) => {
     const userRole = authUser?.role?.toLowerCase();
 
@@ -93,13 +82,10 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/password/reset/:token" element={<ResetPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-        {/* Student Routes */}
         <Route
           path="/student"
           element={
@@ -116,7 +102,6 @@ const App = () => {
           <Route path="notifications" element={<NotificationsPage />} />
         </Route>
 
-        {/* Teacher Routes */}
         <Route
           path="/teacher"
           element={
@@ -131,7 +116,6 @@ const App = () => {
           <Route path="files" element={<TeacherFiles />} />
         </Route>
 
-        {/* Admin Routes */}
         <Route
           path="/admin"
           element={
@@ -149,7 +133,7 @@ const App = () => {
         </Route>
       </Routes>
 
-      <ToastContainer theme="dark" />
+      <ToastContainer theme="dark" transition={Slide} />
     </BrowserRouter>
   );
 };

@@ -1,19 +1,19 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axios";
-import { toast } from "react-toastify";
+import appToast from "../../lib/toast";
 
 export const createStudent = createAsyncThunk(
   "admin/createStudent",
   async (data, thunkAPI) => {
     try {
       const res = await axiosInstance.post("/admin/create-student", data);
-      toast.success(res.data.message || "Student created successfully");
+      appToast.success(res.data.message || "Student created successfully");
       return res.data.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to create student. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -24,13 +24,13 @@ export const updateStudent = createAsyncThunk(
   async ({ id, data }, thunkAPI) => {
     try {
       const res = await axiosInstance.put(`/admin/update-student/${id}`, data);
-      toast.success(res.data.message || "Student updated successfully");
+      appToast.success(res.data.message || "Student updated successfully");
       return res.data.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to update student. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -41,13 +41,13 @@ export const deleteStudent = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const res = await axiosInstance.delete(`/admin/delete-student/${id}`);
-      toast.success(res.data.message || "Student deleted successfully");
+      appToast.success(res.data.message || "Student deleted successfully");
       return id;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to delete student. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -58,13 +58,13 @@ export const createTeacher = createAsyncThunk(
   async (data, thunkAPI) => {
     try {
       const res = await axiosInstance.post("/admin/create-teacher", data);
-      toast.success(res.data.message || "Teacher created successfully");
+      appToast.success(res.data.message || "Teacher created successfully");
       return res.data.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to create teacher. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -75,13 +75,13 @@ export const updateTeacher = createAsyncThunk(
   async ({ id, data }, thunkAPI) => {
     try {
       const res = await axiosInstance.put(`/admin/update-teacher/${id}`, data);
-      toast.success(res.data.message || "Teacher updated successfully");
+      appToast.success(res.data.message || "Teacher updated successfully");
       return res.data.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to update teacher. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -92,13 +92,13 @@ export const deleteTeacher = createAsyncThunk(
   async (id, thunkAPI) => {
     try {
       const res = await axiosInstance.delete(`/admin/delete-teacher/${id}`);
-      toast.success(res.data.message || "Teacher deleted successfully");
+      appToast.success(res.data.message || "Teacher deleted successfully");
       return id;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to delete teacher. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -114,7 +114,7 @@ export const getAllUsers = createAsyncThunk(
       const message =
         error.response?.data?.message ||
         "Failed to load users. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -175,7 +175,7 @@ const adminSlice = createSlice({
             (user) => user._id !== action.payload,
           );
         }
-      }) 
+      })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.users = action.payload.users;
       });

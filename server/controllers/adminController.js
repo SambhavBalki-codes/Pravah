@@ -11,7 +11,6 @@ export const createStudent = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Please provide all required fields", 400));
   }
 
-  //createuser
   const user = await userServices.createUser({
     name,
     email,
@@ -80,7 +79,6 @@ export const createTeacher = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Please provide all required fields", 400));
   }
 
-  //createuser
   const user = await userServices.createUser({
     name,
     email,

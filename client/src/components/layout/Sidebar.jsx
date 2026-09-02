@@ -1,4 +1,3 @@
-// import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 const Sidebar = ({ open, setOpen, userRole }) => {
@@ -282,7 +281,6 @@ const Sidebar = ({ open, setOpen, userRole }) => {
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <div
         className={`fixed -left-full lg:left-0 top-16 h-[calc(100vh-4rem)] bg-white border-r border-slate-200 transition-all duration-300 z-30 ${
           open ? "w-64" : "w-20"
@@ -311,7 +309,6 @@ const Sidebar = ({ open, setOpen, userRole }) => {
                     }
                   `}
                   onClick={() => {
-                    // Close sidebar on mobile after navigation
                     if (window.innerWidth < 1024) {
                       setOpen(false);
                     }
@@ -332,7 +329,6 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             })}
           </nav>
 
-          {/* Sidebar footer */}
           <div className="p-4 border-t border-slate-200">
             <div
               className={`transition-opacity duration-300 ${
@@ -347,65 +343,19 @@ const Sidebar = ({ open, setOpen, userRole }) => {
         </div>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {/* <div className={`fixed inset-0 bg-white z-40 lg:hidden transition-transform duration-300 ${
-        open ? 'translate-x-0' : '-translate-x-full'
-      }`}> */}
-      {/* <div className="flex flex-col h-full pt-16"> */}
-      {/* Mobile navigation */}
-      {/* <nav className="flex-1 px-4 py-6 space-y-2">
-            {navigationItems.map((item) => {
-              const isActive = location.pathname === item.path;
-              
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) => `
-                    flex items-center px-4 py-3 rounded-lg transition-all duration-200
-                    ${isActive 
-                      ? 'bg-blue-50 text-blue-700' 
-                      : 'text-slate-700 hover:bg-slate-100 hover:text-blue-600'
-                    }
-                  `}
-                  onClick={() => setOpen(false)}
-                >
-                  <div className="flex-shrink-0">
-                    {getIcon(item.icon, isActive)}
-                  </div>
-                  <span className="ml-3 font-medium">
-                    {item.name}
-                  </span>
-                </NavLink>
-              );
-            })}
-          </nav> */}
-
-      {/* Mobile footer */}
-      {/* <div className="p-4 border-t border-slate-200">
-            <p className="text-xs text-slate-500 text-center">
-              Educational Project Management v1.0
-            </p>
-          </div> */}
-      {/* </div> */}
-      {/* </div> */}
-
-      {/* Mobile Sidebar Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
-          onClick={() => setOpen(false)} // click backdrop to close
+          onClick={() => setOpen(false)}
         ></div>
       )}
 
-      {/* Mobile Sidebar Drawer */}
       <div
         className={`fixed inset-y-0 left-0 w-64 bg-white z-50 lg:hidden transform transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full pt-16">
-          {/* Mobile navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigationItems.map((item) => {
               const isActive = location.pathname === item.path;
@@ -433,7 +383,6 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             })}
           </nav>
 
-          {/* Mobile footer */}
           <div className="p-4 border-t border-slate-200">
             <p className="text-xs font-normal tracking-wide text-slate-500 text-center">
               Pravah • Connect ideas

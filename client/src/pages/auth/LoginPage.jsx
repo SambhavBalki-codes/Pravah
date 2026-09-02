@@ -20,7 +20,6 @@ const LoginPage = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -29,7 +28,6 @@ const LoginPage = () => {
       [name]: value,
     }));
 
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -38,18 +36,15 @@ const LoginPage = () => {
     }
   };
 
-  // Validate form
   const validateForm = () => {
     const newErrors = {};
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email is invalid";
     }
 
-    // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
@@ -61,7 +56,6 @@ const LoginPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Submit login form
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -78,7 +72,6 @@ const LoginPage = () => {
     );
   };
 
-  // Redirect after successful login
   useEffect(() => {
     if (authUser) {
       const role = authUser.role?.toLowerCase();
@@ -105,7 +98,6 @@ const LoginPage = () => {
       <div className="absolute inset-0 bg-slate-950/25" />
 
       <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-sm shadow-2xl py-6 px-6 sm:py-8 sm:px-10">
-        {/* Project Name */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-blue-100 bg-white shadow-sm sm:h-32 sm:w-32">
             <img
@@ -122,9 +114,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
           <div>
             <label
               htmlFor="email"
@@ -156,7 +146,6 @@ const LoginPage = () => {
             )}
           </div>
 
-          {/* Password */}
           <div>
             <label
               htmlFor="password"
@@ -188,7 +177,6 @@ const LoginPage = () => {
             )}
           </div>
 
-          {/* Role */}
           <div>
             <label
               htmlFor="role"
@@ -216,7 +204,6 @@ const LoginPage = () => {
             </div>
           </div>
 
-          {/* Login Button */}
           <button
             type="submit"
             disabled={isLoggingIn}
@@ -236,7 +223,6 @@ const LoginPage = () => {
           </button>
         </form>
 
-        {/* Forgot Password */}
         <div className="mt-4 text-center">
           <Link
             to="/forgot-password"

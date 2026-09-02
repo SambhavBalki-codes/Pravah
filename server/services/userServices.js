@@ -13,7 +13,7 @@ export const createUser = async (userData) => {
 export const updateUser = async (id, updateData) => {
   try {
     return await User.findByIdAndUpdate(id, updateData, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     }).select("-password");
   } catch (error) {

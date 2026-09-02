@@ -23,7 +23,16 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["request", "approval", "rejection", "feedback" , "deadline" , "general" , "meeting" , "system"],
+      enum: [
+        "request",
+        "approval",
+        "rejection",
+        "feedback",
+        "deadline",
+        "general",
+        "meeting",
+        "system",
+      ],
       default: "general",
     },
     priority: {
@@ -35,7 +44,7 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Indexing for better query performance
-notificationSchema.index({ user: 1 , isRead: 1}); // when we search for notifications by user and read status
+notificationSchema.index({ user: 1, isRead: 1 });
 
-export const Notification = mongoose.models.Project || mongoose.model("Project", notificationSchema);
+export const Notification =
+  mongoose.models.Project || mongoose.model("Project", notificationSchema);

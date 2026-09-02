@@ -40,6 +40,15 @@ export const login = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Invalid email or password", 401));
   }
 
+  if (user.role !== role) {
+    return next(
+      new ErrorHandler(
+        "Selected role does not match this account. Please select the correct role.",
+        403,
+      ),
+    );
+  }
+
   generateToken(user, 200, "User logged in successfully", res);
 });
 

@@ -21,14 +21,14 @@ const deadlineSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
       default: null,
-    }, 
+    },
   },
   { timestamps: true },
 );
 
-// Indexing for better query performance
-deadlineSchema.index({ dueDate: 1 }); 
-deadlineSchema.index({ project: 1 }); 
-deadlineSchema.index({ createdBy: 1 }); 
+deadlineSchema.index({ dueDate: 1 });
+deadlineSchema.index({ project: 1 });
+deadlineSchema.index({ createdBy: 1 });
 
-export const Notification = mongoose.models.Project || mongoose.model("Project", deadlineSchema);
+export const Notification =
+  mongoose.models.Project || mongoose.model("Project", deadlineSchema);

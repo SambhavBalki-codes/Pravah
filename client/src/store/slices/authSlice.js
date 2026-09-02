@@ -1,17 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axios";
-import { toast } from "react-toastify";
+import appToast from "../../lib/toast";
 
 export const login = createAsyncThunk("login", async (data, thunkAPI) => {
   try {
     const response = await axiosInstance.post("/auth/login", data);
-    toast.success(response.data.message);
+    appToast.success(response.data.message);
     return response.data;
   } catch (error) {
     const message =
       error.response?.data?.message ||
       "Unable to connect to the server. Please try again.";
-    toast.error(message);
+    appToast.error(message);
     return thunkAPI.rejectWithValue(message);
   }
 });
@@ -21,13 +21,13 @@ export const forgotPassword = createAsyncThunk(
   async (data, thunkAPI) => {
     try {
       const response = await axiosInstance.post("/auth/password/forgot", data);
-      toast.success(response.data.message || "Password reset link sent.");
+      appToast.success(response.data.message || "Password reset link sent.");
       return response.data;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Unable to send reset email. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -44,13 +44,13 @@ export const resetPassword = createAsyncThunk(
           confirmPassword,
         },
       );
-      toast.success(response.data.message || "Password reset successful.");
+      appToast.success(response.data.message || "Password reset successful.");
       return response.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Unable to reset your password. Please try again.";
-      toast.error(message);
+      appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
   },
@@ -70,12 +70,12 @@ export const getUser = createAsyncThunk("auth/me", async (_, thunkAPI) => {
 export const logout = createAsyncThunk("logout", async (_, thunkAPI) => {
   try {
     const response = await axiosInstance.get("/auth/logout");
-    toast.success(response.data.message || "Logged out successfully.");
+    appToast.success(response.data.message || "Logged out successfully.");
     return response.data;
   } catch (error) {
     const message =
       error.response?.data?.message || "Unable to log out. Please try again.";
-    toast.error(message);
+    appToast.error(message);
     return thunkAPI.rejectWithValue(message);
   }
 });

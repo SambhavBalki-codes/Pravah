@@ -11,7 +11,9 @@ export const errorMiddleware = (err, req, res, next) => {
   if (error.code === 11000) {
     const message = `Duplicate ${Object.keys(error.keyValue)} Entered`;
     error = new ErrorHandler(message, 400);
-  } else if (error.name === "JsonWebTokenError") {
+  } else if (error.name
+    
+    === "JsonWebTokenError") {
     error = new ErrorHandler(
       "JSON Web Token is invalid, Try Again",
       400

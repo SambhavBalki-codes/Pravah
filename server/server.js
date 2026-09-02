@@ -3,12 +3,11 @@ import app from "./app.js";
 
 connectDB();
 
-const PORT = process.env.PORT || 4000;  
+const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-//error handling 
 process.on("unhandledRejection", (err) => {
   console.log(`Error: ${err.message}`);
   console.log(`Shutting down the server due to Unhandled Promise Rejection`);
@@ -17,7 +16,6 @@ process.on("unhandledRejection", (err) => {
     process.exit(1);
   });
 });
-
 
 process.on("uncaughtException", (err) => {
   console.log(`Error: ${err.message}`);
