@@ -107,6 +107,30 @@ export const requestSupervisor = createAsyncThunk(
   },
 );
 
+export const uploadFiles = createAsyncThunk(
+  "student/uploadFiles",
+  async ({ projectId, files }, thunkAPI) => {
+    try {
+      const formData = new FormData();
+      files.forEach((file) => formData.append("files", file));
+      const res = await axiosInstance.post(
+        `/student/upload/${projectId}`,
+        formData,
+        {
+          "Content-Type": "multipart/form-data",
+        },
+      );
+      toast.success(res.data.message || "Files uploaded successfully");
+      return res.data.data?.project || res.data.data || res.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Failed to upload files.";
+      toast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
 const studentSlice = createSlice({
   name: "student",
   initialState: {
@@ -158,6 +182,19 @@ const studentSlice = createSlice({
         state.files = action.payload?.files || [];
       })
       .addCase(uploadProjectFiles.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(uploadFiles.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(uploadFiles.fulfilled, (state, action) => {
+        state.loading = false;
+        state.project = action.payload;
+        state.files = action.payload?.files || [];
+      })
+      .addCase(uploadFiles.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       })
