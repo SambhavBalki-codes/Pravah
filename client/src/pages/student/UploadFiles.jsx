@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
   Code2,
+  Download,
   File,
   FileText,
   Info,
@@ -10,7 +11,11 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { fetchProject, uploadFiles } from "../../store/slices/studentSlice";
+import {
+  fetchProject,
+  uploadFiles,
+  downloadFile,
+} from "../../store/slices/studentSlice";
 const UploadFiles = () => {
   const dispatch = useDispatch();
 
@@ -99,6 +104,27 @@ const UploadFiles = () => {
       accept: ".zip,.rar,.7z",
     },
   ];
+
+  const handleDownloadFile = async (file) => {
+    if (!project?._id || !file?._id) {
+      return;
+    }
+    const result = await dispatch(
+      downloadFile({ projectId: project._id, fileId: file._id }),
+    );
+
+    if (!downloadFile.fulfilled.match(result)) {
+      return;
+    }
+
+    const url = URL.createObjectURL(result.payload.blob);
+    const a = Object.assign(document.createElement("a"), {
+      href: url,
+      download: file.originalName || file.name || "downloaded_file",
+    });
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -220,14 +246,27 @@ const UploadFiles = () => {
                   const fileName =
                     typeof file === "string"
                       ? file.split("/").pop()
-                      : file.name;
+                      : file.originalName || file.name || "Uploaded file";
                   return (
                     <div
                       key={`${fileName}-${index}`}
                       className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700"
                     >
                       {getFileIcon(fileName)}
-                      <span className="truncate">{fileName}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {fileName}
+                      </span>
+                      {typeof file !== "string" && file._id && (
+                        <button
+                          type="button"
+                          aria-label={`Download ${fileName}`}
+                          title={`Download ${fileName}`}
+                          onClick={() => handleDownloadFile(file)}
+                          className="ml-2 rounded-md p-1.5 text-slate-500 transition hover:bg-blue-100 hover:text-blue-600"
+                        >
+                          <Download className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}

@@ -6,6 +6,9 @@ import {
   getAvailableSupervisors,
   requestSupervisor,
   getSupervisor,
+  getFeedback,
+  getDashboardStats,
+  downloadFile,
 } from "../controllers/studentController.js";
 import {
   isAuthenticated,
@@ -53,6 +56,27 @@ router.get(
   isAuthenticated,
   isAuthorized("Student"),
   getSupervisor,
+);
+
+router.get(
+  "/feedback/:projectId",
+  isAuthenticated,
+  isAuthorized("Student"),
+  getFeedback,
+);
+
+router.get(
+  "/fetch-dashboard-stats",
+  isAuthenticated,
+  isAuthorized("Student"),
+  getDashboardStats,
+);
+
+router.get(
+  "/download/:projectId/:fileId",
+  isAuthenticated,
+  isAuthorized("Student"),
+  downloadFile,
 );
 
 export default router;

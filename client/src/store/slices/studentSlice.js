@@ -131,6 +131,59 @@ export const uploadFiles = createAsyncThunk(
   },
 );
 
+export const fetchDashboardStats = createAsyncThunk(
+  "student/fetchDashboardStats",
+  async (_, thunkAPI) => {
+    try {
+      const response = await axiosInstance.get(
+        "/student/fetch-dashboard-stats",
+      );
+      return response.data.data || response.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Failed to load dashboard stats.";
+      toast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const getFeedback = createAsyncThunk(
+  "student/getFeedback",
+  async (projectId, thunkAPI) => {
+    try {
+      const response = await axiosInstance.get(
+        `/student/feedback/${projectId}`,
+      );
+      return response.data.data?.feedback || response.data.data || [];
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Failed to load feedback.";
+      toast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const downloadFile = createAsyncThunk(
+  "student/downloadFile",
+  async ({ projectId, fileId }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(
+        `/student/download/${projectId}/${fileId}`,
+        { responseType: "blob" },
+      );
+
+     return {blob : res.data ,projectId, fileId};
+    } catch (error) {
+      const message =
+        error.response?.data?.message || "Failed to download file.";
+      toast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
 const studentSlice = createSlice({
   name: "student",
   initialState: {
@@ -230,6 +283,30 @@ const studentSlice = createSlice({
         state.loading = false;
       })
       .addCase(requestSupervisor.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(fetchDashboardStats.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchDashboardStats.fulfilled, (state, action) => {
+        state.loading = false;
+        state.dashboardStats = action.payload || {};
+      })
+      .addCase(fetchDashboardStats.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+      .addCase(getFeedback.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getFeedback.fulfilled, (state, action) => {
+        state.loading = false;
+        state.feedback = action.payload || [];
+      })
+      .addCase(getFeedback.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       });
