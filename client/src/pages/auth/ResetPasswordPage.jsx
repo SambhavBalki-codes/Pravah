@@ -103,18 +103,22 @@ const ResetPasswordPage = () => {
     >
       <div className="absolute inset-0 bg-slate-950/25" />
 
-      <div className="relative z-10 w-full max-w-md bg-white/90 rounded-2xl shadow-2xl p-8 sm:p-10">
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center mx-auto mb-3">
-            <i className="bx bx-lock-open-alt text-3xl text-indigo-600"></i>
+      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
+        <div className="mb-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 ring-8 ring-blue-50">
+            <i className="bx bx-lock-open-alt text-3xl"></i>
           </div>
 
-          <h1 className="text-3xl font-bold text-blue-700">
-            RESET PASSWORD FORM
+          <p className="mt-7 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
+            Account recovery
+          </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+            Reset your password
           </h1>
 
-          <p className="mt-2 text-gray-500 text-base">
-            Enter your new password below to reset your account password.
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Choose a new password to secure your account.
           </p>
         </div>
 
@@ -122,13 +126,13 @@ const ResetPasswordPage = () => {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
+              className="mb-2 block text-sm font-semibold text-slate-700"
             >
               New Password
             </label>
 
             <div className="relative">
-              <i className="bx bx-lock-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+              <i className="bx bx-lock-alt absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
 
               <input
                 id="password"
@@ -137,10 +141,10 @@ const ResetPasswordPage = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="Enter new password"
-                className={`w-full text-base pl-10 pr-4 py-2.5 rounded-lg border outline-none transition ${
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-base outline-none transition placeholder:text-slate-400 ${
                   errors.password
                     ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 }`}
               />
             </div>
@@ -153,13 +157,13 @@ const ResetPasswordPage = () => {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
+              className="mb-2 block text-sm font-semibold text-slate-700"
             >
               Confirm Password
             </label>
 
             <div className="relative">
-              <i className="bx bx-lock-open-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+              <i className="bx bx-lock-open-alt absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
 
               <input
                 id="confirmPassword"
@@ -168,10 +172,10 @@ const ResetPasswordPage = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="Confirm your password"
-                className={`w-full text-base pl-10 pr-4 py-2.5 rounded-lg border outline-none transition ${
+                className={`w-full rounded-lg border py-3 pl-10 pr-4 text-base outline-none transition placeholder:text-slate-400 ${
                   errors.confirmPassword
                     ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 }`}
               />
             </div>
@@ -190,7 +194,7 @@ const ResetPasswordPage = () => {
           <button
             type="submit"
             disabled={isUpdatingPassword}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isUpdatingPassword ? (
               <>
@@ -209,9 +213,10 @@ const ResetPasswordPage = () => {
         <div className="mt-6 text-center">
           <Link
             to="/login"
-            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+            className="inline-flex items-center text-sm font-semibold text-slate-500 transition hover:text-blue-600"
           >
-            Back to login
+            <i className="bx bx-arrow-back mr-2 text-lg"></i>
+            Return to login
           </Link>
         </div>
       </div>

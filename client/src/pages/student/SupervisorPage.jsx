@@ -242,7 +242,9 @@ const SupervisorPage = () => {
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-400">STATUS</p>
-                <span className="mt-1 inline-flex rounded-full bg-yellow-100 px-2.5 py-1 text-xs font-medium capitalize text-yellow-700">
+                <span
+                  className={`badge ${project.status === "approved" ? "badge-approved" : "badge-rejected"} mt-1 capitalize`}
+                >
                   {project.status || "Pending"}
                 </span>
               </div>
