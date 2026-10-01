@@ -39,8 +39,8 @@ if (!fs.existsSync(tempDir)) {
 }
 
 
-app.use(cookieParser());
-app.use(express.json());
+app.use(cookieParser()); //It allows your backend to read cookies sent by the browser.
+app.use(express.json()); //It parses incoming JSON request bodies and makes the data available in req.body.
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/auth", authRouter);
