@@ -41,7 +41,7 @@ export const addFilesToProject = async (projectId, files) => {
   }));
 
   project.files.push(...fileMetadata);
-  await project.save();
+  return await project.save();
 };
 
 export const getAllProjects = async () => {

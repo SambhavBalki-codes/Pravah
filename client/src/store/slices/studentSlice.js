@@ -155,7 +155,7 @@ export const getFeedback = createAsyncThunk(
       const response = await axiosInstance.get(
         `/student/feedback/${projectId}`,
       );
-      return response.data.data?.feedback || response.data.data || [];
+      return response.data.data?.feedbacks || response.data.data || [];
     } catch (error) {
       const message =
         error.response?.data?.message || "Failed to load feedback.";

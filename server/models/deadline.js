@@ -30,5 +30,5 @@ deadlineSchema.index({ dueDate: 1 });
 deadlineSchema.index({ project: 1 });
 deadlineSchema.index({ createdBy: 1 });
 
-export const Notification =
-  mongoose.models.Project || mongoose.model("Project", deadlineSchema);
+export const Deadline =
+  mongoose.models.Deadline || mongoose.model("Deadline", deadlineSchema);

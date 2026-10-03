@@ -13,7 +13,7 @@ const ensureDirExists = (dir) => {
 };
 
 const storage = multer.diskStorage({
-  desination: (req, file, cb) => {
+  destination: (req, file, cb) => {
     let uploadPath;
     if (req.route.path.includes("/upload/:projectID")) {
       uploadPath = path.join(

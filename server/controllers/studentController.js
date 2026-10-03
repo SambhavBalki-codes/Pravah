@@ -211,8 +211,8 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     .lean();
 
   const feedbackNotifications =
-    project?.feedback && project.feedback.length > 0
-      ? project.feedback
+    project?.feedbacks && project.feedbacks.length > 0
+      ? [...project.feedbacks]
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .slice(0, 2)
       : [];
@@ -246,13 +246,13 @@ export const getFeedback = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const sortedFeedback = project.feedback.sort(
+  const sortedFeedback = [...project.feedbacks].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
   );
 
   res.status(200).json({
     success: true,
-    data: { feedback: sortedFeedback },
+    data: { feedbacks: sortedFeedback },
     message: "Feedback fetched successfully",
   });
 });
