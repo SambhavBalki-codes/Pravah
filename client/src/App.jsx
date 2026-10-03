@@ -23,7 +23,11 @@ import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
 import { Slide, ToastContainer } from "react-toastify";
-import { getAllUsers,getAllProjects } from "./store/slices/adminSlice";
+import {
+  getAllUsers,
+  getAllProjects,
+  getDashboardStats,
+} from "./store/slices/adminSlice";
 
 const App = () => {
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
@@ -38,6 +42,7 @@ const App = () => {
     if (authUser?.role === "Admin") {
       dispatch(getAllUsers());
       dispatch(getAllProjects());
+      dispatch(getDashboardStats());
     }
   }, [authUser, dispatch]);
 

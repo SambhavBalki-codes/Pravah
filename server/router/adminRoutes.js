@@ -10,6 +10,7 @@ import {
   getAllUsers,
   getAllProjects,
   updateProjectStatus,
+  getDashboardStats,
 } from "../controllers/adminController.js";
 import { isAuthenticated ,isAuthorized} from "../middlewares/authMiddleware.js";
 import { body, param } from "express-validator";
@@ -25,6 +26,13 @@ const userFields = [
   body("department").trim().notEmpty().withMessage("is required"),
 ];
 const userId = param("id").isMongoId().withMessage("must be a valid user id");
+
+router.get(
+  "/dashboard",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  getDashboardStats,
+);
 
 router.post("/create-student", isAuthenticated, isAuthorized("Admin"), ...userFields, validate, createStudent);
 

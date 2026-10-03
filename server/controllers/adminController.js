@@ -2,8 +2,10 @@ import crypto from "crypto";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import ErrorHandler from "../middlewares/error.js";
 import User from "../models/user.js";
+import { Project } from "../models/project.js";
 import * as userServices from "../services/userServices.js";
 import * as projectServices from "../services/projectService.js";
+import * as dashboardService from "../services/dashboardService.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 import { isValidProjectStatusTransition } from "../utils/projectStatus.js";
 
@@ -213,4 +215,12 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
 
 export const assignedSupervisor = asyncHandler(async (req, res, next) => {});
 
-export const getDashboardStats = asyncHandler(async (req, res, next) => {});
+export const getDashboardStats = asyncHandler(async (req, res, next) => {
+  const dashboard = await dashboardService.getDashboardData();
+
+  res.status(200).json({
+    success: true,
+    message: "Dashboard data fetched successfully",
+    data: dashboard,
+  });
+});

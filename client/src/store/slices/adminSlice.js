@@ -136,6 +136,22 @@ export const getAllProjects = createAsyncThunk(
   },
 );
 
+export const getDashboardStats = createAsyncThunk(
+  "admin/getDashboardStats",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get("/admin/dashboard");
+      return res.data.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        "Failed to load dashboard statistics. Please try again.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -146,6 +162,9 @@ const adminSlice = createSlice({
     stats: null,
     loading: false,
     error: null,
+    dashboard: null,
+    dashboardLoading: false,
+    dashboardError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -197,6 +216,18 @@ const adminSlice = createSlice({
       })
       .addCase(getAllProjects.fulfilled, (state, action) => {
         state.projects = action.payload.projects;
+      })
+      .addCase(getDashboardStats.pending, (state) => {
+        state.dashboardLoading = true;
+        state.dashboardError = null;
+      })
+      .addCase(getDashboardStats.fulfilled, (state, action) => {
+        state.dashboardLoading = false;
+        state.dashboard = action.payload;
+      })
+      .addCase(getDashboardStats.rejected, (state, action) => {
+        state.dashboardLoading = false;
+        state.dashboardError = action.payload;
       });
   },
 });

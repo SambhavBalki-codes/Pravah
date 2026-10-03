@@ -19,7 +19,7 @@ import {
 import { toggleTeacherModal } from "../../store/slices/popupSlice";
 
 const ManageTeachers = () => {
-  const { users } = useSelector((state) => state.admin);
+  const { users, projects } = useSelector((state) => state.admin);
   const { isCreateTeacherModalOpen } = useSelector((state) => state.popup);
 
   const [showModal, setShowModal] = useState(false);
@@ -52,8 +52,15 @@ const ManageTeachers = () => {
         assignedStudentCount: Array.isArray(teacher.assignedStudents)
           ? teacher.assignedStudents.length
           : 0,
+        workload: (projects || []).filter((project) => {
+          const supervisorId =
+            typeof project.supervisor === "object"
+              ? project.supervisor?._id
+              : project.supervisor;
+          return String(supervisorId) === String(teacher._id || teacher.id);
+        }).length,
       }));
-  }, [users]);
+  }, [users, projects]);
 
   const departments = useMemo(() => {
     const uniqueDepartments = new Set();
@@ -277,6 +284,7 @@ const ManageTeachers = () => {
                 <th className="py-3 font-medium">Expertise</th>
                 <th className="py-3 font-medium">Max Students</th>
                 <th className="py-3 font-medium">Assigned</th>
+                <th className="py-3 font-medium">Workload</th>
                 <th className="py-3 font-medium text-right">Actions</th>
               </tr>
             </thead>
@@ -331,6 +339,12 @@ const ManageTeachers = () => {
                       </span>
                     </td>
                     <td className="py-3">
+                      <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-700">
+                        {teacher.workload} project
+                        {teacher.workload === 1 ? "" : "s"}
+                      </span>
+                    </td>
+                    <td className="py-3">
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -355,7 +369,7 @@ const ManageTeachers = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan="6"
+                    colSpan="7"
                     className="py-8 text-center text-sm text-slate-500"
                   >
                     No teachers found.

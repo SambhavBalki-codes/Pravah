@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   Plus,
   Search,
+  Eye,
   Pencil,
   Trash2,
   Users,
@@ -26,6 +27,8 @@ const ManageStudents = () => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDepartment, setFilterDepartment] = useState("all");
+  const [filterProjectStatus, setFilterProjectStatus] = useState("all");
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
 
@@ -97,8 +100,11 @@ const ManageStudents = () => {
 
     const matchesFilter =
       filterDepartment === "all" || student.department === filterDepartment;
+    const matchesProjectStatus =
+      filterProjectStatus === "all" ||
+      (student.projectStatus || "pending") === filterProjectStatus;
 
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesFilter && matchesProjectStatus;
   });
 
   const handleCloseModal = () => {
@@ -265,6 +271,20 @@ const ManageStudents = () => {
                 </option>
               ))}
             </select>
+
+            <select
+              value={filterProjectStatus}
+              onChange={(e) => setFilterProjectStatus(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500"
+            >
+              <option value="all">All Project Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="in_progress">In Progress</option>
+              <option value="revision_required">Revision Required</option>
+              <option value="rejected">Rejected</option>
+              <option value="completed">Completed</option>
+            </select>
           </div>
         </div>
 
@@ -343,6 +363,14 @@ const ManageStudents = () => {
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
+                          onClick={() => setSelectedStudent(student)}
+                          className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:bg-slate-100"
+                          title="View details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleEdit(student)}
                           className="rounded-lg border border-blue-200 bg-blue-50 p-2 text-blue-600 hover:bg-blue-100"
                           title="Edit"
@@ -377,6 +405,86 @@ const ManageStudents = () => {
       </div>
 
       {isCreateStudentModalOpen && <AddStudent />}
+
+      {selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-lg">
+            <div className="mb-5 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">
+                  Student Details
+                </h2>
+                <p className="text-sm text-slate-500">
+                  {selectedStudent.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStudent(null)}
+                className="text-slate-500 hover:text-slate-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Email
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {selectedStudent.email}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Department
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {selectedStudent.department || "Not assigned"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Project
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {selectedStudent.projectTitle || "No project"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Project Status
+                </p>
+                <p className="mt-1 text-sm capitalize text-slate-700">
+                  {(selectedStudent.projectStatus || "pending").replaceAll(
+                    "_",
+                    " ",
+                  )}
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Assigned Supervisor
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {selectedStudent.supervisor?.name || "Not assigned"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedStudent(null)}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
