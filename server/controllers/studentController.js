@@ -33,15 +33,19 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
   const { title, description } = req.body;
 
   const existingProject =
-    await projectService.getActiveProjectByStudentId(studentID);
+    await projectService.getProjectByStudentId(studentID);
 
-  if (existingProject) {
+  if (existingProject && existingProject.status !== "rejected") {
     return next(
       new ErrorHandler(
         "You have an active project. You can only submit a new proposal if the previous project is rejected.",
         400,
       ),
     );
+  }
+
+  if (existingProject && existingProject.status === "rejected") {
+    await Project.findByIdAndDelete(existingProject._id);
   }
 
   const projectData = {

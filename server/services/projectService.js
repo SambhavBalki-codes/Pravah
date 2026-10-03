@@ -43,3 +43,10 @@ export const addFilesToProject = async (projectId, files) => {
   project.files.push(...fileMetadata);
   await project.save();
 };
+
+export const getAllProjects = async () => {
+  const projects = await Project.find()
+    .populate("supervisor", "name email department")
+    .populate("student", "name email");
+  return projects;
+};

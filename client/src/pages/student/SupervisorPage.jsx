@@ -98,7 +98,7 @@ const SupervisorPage = () => {
               <div>
                 <div className="flex items-center gap-2">
                   <ContactRound className="h-6 w-6 text-blue-500" />
-                  <h2 className="text-lg font-semibold text-slate-800">
+                  <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                     Assigned Supervisor
                   </h2>
                 </div>
@@ -117,25 +117,25 @@ const SupervisorPage = () => {
             {hasSupervisor ? (
               <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-lg font-semibold text-slate-800">
+                  <p className="text-lg font-semibold text-slate-900">
                     {supervisor.name || "Supervisor"}
                   </p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                  <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
                     <Mail className="h-4 w-4" />
                     {supervisor.email || "Email not available"}
                   </p>
                   {supervisor.department && (
-                    <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-700">
                       Department: {supervisor.department}
                     </p>
                   )}
                 </div>
                 {supervisor.expertise?.length > 0 && (
                   <div className="sm:max-w-xs sm:text-right">
-                    <p className="text-xs font-medium text-slate-400">
+                  <p className="text-xs font-medium text-slate-600">
                       Expertise
                     </p>
-                    <p className="mt-1 text-sm text-slate-600">
+                  <p className="mt-1 text-sm text-slate-800">
                       {supervisor.expertise.join(", ")}
                     </p>
                   </div>
@@ -156,10 +156,10 @@ const SupervisorPage = () => {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
             <div className="border-b border-slate-100 pb-4">
-              <h2 className="text-lg font-semibold text-slate-800">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                 Available Supervisors
               </h2>
-              <p className="mt-1 text-[0.9375rem] font-medium text-blue-700">
+              <p className="mt-1 text-[0.9375rem] text-slate-500">
                 Select a supervisor whose expertise matches your project.
               </p>
             </div>
@@ -178,7 +178,7 @@ const SupervisorPage = () => {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-slate-800">
+                          <p className="font-semibold text-slate-900">
                             {availableSupervisor.name}
                             {availableSupervisor.department && (
                               <span className="ml-1 font-normal text-slate-500">
@@ -231,34 +231,50 @@ const SupervisorPage = () => {
         </section>
 
         <aside className="self-start rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
-          <h2 className="text-lg font-semibold text-slate-800">Project</h2>
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">
+            Project
+          </h2>
           {project ? (
             <div className="mt-4 space-y-4">
               <div>
-                <p className="text-xs font-medium text-slate-400">TITLE</p>
-                <p className="mt-1 break-words font-serif text-base font-medium leading-6 text-slate-800">
+                <p className="text-xs font-semibold tracking-wide text-slate-400">
+                  TITLE
+                </p>
+                <p className="mt-1 break-words font-serif text-base font-medium leading-6 text-slate-900">
                   {project.title || "Untitled project"}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-400">STATUS</p>
-                <span
-                  className={`badge ${project.status === "approved" ? "badge-approved" : "badge-rejected"} mt-1 capitalize`}
-                >
-                  {project.status || "Pending"}
-                </span>
+                <p className="text-xs font-semibold tracking-wide text-slate-400">
+                  STATUS
+                </p>
+                {(() => {
+                  const status = (project.status || "pending").toLowerCase();
+
+                  return (
+                    <span
+                      className={`badge badge-${status} mt-1 capitalize`}
+                    >
+                      {status}
+                    </span>
+                  );
+                })()}
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-400">DEADLINE</p>
-                <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
-                  <CalendarDays className="h-4 w-4 text-slate-400" />
+                <p className="text-xs font-semibold tracking-wide text-slate-400">
+                  DEADLINE
+                </p>
+                <p className="mt-1 flex items-center gap-2 text-sm text-slate-800">
+                  <CalendarDays className="h-4 w-4 text-slate-600" />
                   {formatDeadline(project.deadline)}
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-400">CREATED</p>
-                <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
-                  <CalendarDays className="h-4 w-4 text-slate-400" />
+                <p className="text-xs font-semibold tracking-wide text-slate-400">
+                  CREATED
+                </p>
+                <p className="mt-1 flex items-center gap-2 text-sm text-slate-800">
+                  <CalendarDays className="h-4 w-4 text-slate-600" />
                   {project.createdAt ? formatDeadline(project.createdAt) : "-"}
                 </p>
               </div>
@@ -276,7 +292,7 @@ const SupervisorPage = () => {
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-lg md:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-lg font-semibold text-slate-800">
+                <h2 className="text-lg font-semibold tracking-tight text-slate-900">
                   Request Supervisor
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">

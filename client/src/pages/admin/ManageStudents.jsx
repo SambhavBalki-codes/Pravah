@@ -42,14 +42,39 @@ const ManageStudents = () => {
     );
 
     return studentUsers.map((student) => {
+      const studentId = student._id || student.id;
       const studentProject = (projects || []).find(
-        (project) => project.studentId === (student._id || student.id),
+        (project) => {
+          const projectStudentId =
+            typeof project.student === "object"
+              ? project.student?._id
+              : project.student;
+
+          return String(projectStudentId) === String(studentId);
+        },
       );
+
+      const projectSupervisor = studentProject?.supervisor;
+      const supervisorId =
+        typeof projectSupervisor === "object"
+          ? projectSupervisor?._id
+          : projectSupervisor;
+      const assignedSupervisor =
+        (projectSupervisor &&
+          typeof projectSupervisor === "object" &&
+          projectSupervisor.name &&
+          projectSupervisor) ||
+        (users || []).find(
+          (user) =>
+            user.role?.toLowerCase() === "teacher" &&
+            String(user._id || user.id) === String(supervisorId),
+        ) ||
+        student.supervisor;
 
       return {
         ...student,
         projectTitle: studentProject ? studentProject.title : null,
-        supervisor: studentProject ? studentProject.supervisor : null,
+        supervisor: assignedSupervisor || null,
         projectStatus: studentProject ? studentProject.status : null,
       };
     });
@@ -276,13 +301,33 @@ const ManageStudents = () => {
                       {student.department || "-"}
                     </td>
                     <td className="py-3 text-slate-600">
-                      {student.projectTitle || "No project"}
+                      <span className="block max-w-[220px] whitespace-normal break-words">
+                        {student.projectTitle || "No project"}
+                      </span>
                     </td>
                     <td className="py-3">
                       {student.supervisor ? (
-                        <span className="text-slate-600">
-                          {student.supervisor}
-                        </span>
+                        <div className="whitespace-nowrap text-sm">
+                          {typeof student.supervisor === "object" ? (
+                            <>
+                              <span className="font-medium text-slate-700">
+                                {student.supervisor.name || "Assigned"}
+                              </span>
+                              {student.supervisor.department && (
+                                <>
+                                  <span className="mx-1 text-slate-300">|</span>
+                                  <span className="rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">
+                                    {student.supervisor.department.split(/\s+/)[0]}
+                                  </span>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <span className="font-medium text-slate-700">
+                              {student.supervisor}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700">
                           Not Assigned

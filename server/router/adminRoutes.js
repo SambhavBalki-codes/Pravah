@@ -8,6 +8,7 @@ import {
   updateTeacher,
   deleteTeacher,
   getAllUsers,
+  getAllProjects,
 } from "../controllers/adminController.js";
 import { isAuthenticated ,isAuthorized} from "../middlewares/authMiddleware.js";
 
@@ -31,6 +32,13 @@ router.get("/users" ,
   isAuthenticated,
   isAuthorized("Admin"),
   getAllUsers
+);
+
+router.get(
+  "/projects",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  getAllProjects,
 );
 
 

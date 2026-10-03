@@ -120,6 +120,22 @@ export const getAllUsers = createAsyncThunk(
   },
 );
 
+export const getAllProjects = createAsyncThunk(
+  "admin/getAllProjects",
+  async (_, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get("/admin/projects");
+      return res.data.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        "Failed to load projects. Please try again.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -178,6 +194,9 @@ const adminSlice = createSlice({
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.users = action.payload.users;
+      })
+      .addCase(getAllProjects.fulfilled, (state, action) => {
+        state.projects = action.payload.projects;
       });
   },
 });

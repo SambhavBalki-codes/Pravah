@@ -214,9 +214,10 @@ const UploadFiles = () => {
                       type="button"
                       aria-label={`Remove ${file.name}`}
                       onClick={() => removeSelected(file.name)}
-                      className="ml-3 rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                      className="ml-3 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition hover:bg-red-50 hover:text-red-600"
                     >
                       <X className="h-4 w-4" />
+                      <span>Remove</span>
                     </button>
                   </div>
                 ))}
