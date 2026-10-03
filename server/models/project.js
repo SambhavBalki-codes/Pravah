@@ -87,11 +87,14 @@ const projectSchema = new mongoose.Schema(
 );
 
 projectSchema.index({ student: 1 });
+projectSchema.index({ student: 1, createdAt: -1 });
 projectSchema.index({ supervisor: 1 });
 projectSchema.index({ status: 1 });
+projectSchema.index({ createdAt: -1 });
 projectSchema.index(
   { student: 1 },
   {
+    name: "unique_active_project_per_student",
     unique: true,
     partialFilterExpression: {
       status: {

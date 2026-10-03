@@ -15,7 +15,22 @@ export const isAuthenticated = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Please login to access this resource", 401));
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  let decoded;
+
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return next(new ErrorHandler("Your session has expired. Please log in again.", 401));
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return next(new ErrorHandler("Invalid authentication token", 401));
+    }
+
+    throw error;
+  }
+
   req.user = await User.findById(decoded.id).select(
     "-resetPasswordToken -resetPasswordExpire",
   );

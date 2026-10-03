@@ -30,6 +30,7 @@ const supervisorRequestSchema = new mongoose.Schema(
 supervisorRequestSchema.index({ student: 1 });
 supervisorRequestSchema.index({ supervisor: 1 });
 supervisorRequestSchema.index({ status: 1 });
+supervisorRequestSchema.index({ student: 1, supervisor: 1, status: 1 });
 supervisorRequestSchema.index(
   { student: 1, supervisor: 1 },
   {

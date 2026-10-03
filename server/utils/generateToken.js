@@ -1,3 +1,5 @@
+import { authCookieOptions } from "./cookieOptions.js";
+
 export const generateToken = (user, statusCode, message, res) => {
   const token = user.generateToken();
   const userResponse = user.toObject();
@@ -6,6 +8,7 @@ export const generateToken = (user, statusCode, message, res) => {
   res
     .status(statusCode)
     .cookie("token", token, {
+      ...authCookieOptions,
       expires: new Date(
         Date.now() + process.env.COOKIE_EXPIRE * 24 * 60 * 60 * 1000,
       ),

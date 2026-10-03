@@ -87,8 +87,15 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.generateToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRE,
+  const secret = process.env.JWT_SECRET;
+  const expiresIn = process.env.JWT_EXPIRE;
+
+  if (!secret || !expiresIn) {
+    throw new Error("JWT configuration is missing");
+  }
+
+  return jwt.sign({ id: this._id }, secret, {
+    expiresIn,
   });
 };
 
@@ -105,6 +112,9 @@ userSchema.methods.getResetPasswordToken = function () {
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
   return resetToken;
 };
+
+userSchema.index({ role: 1, createdAt: -1 });
+userSchema.index({ resetPasswordToken: 1, resetPasswordExpire: 1 });
 
 const User = mongoose.model("User", userSchema);
 

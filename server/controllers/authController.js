@@ -6,6 +6,7 @@ import sendEmail from "../services/emailService.js";
 import { generateForgotPasswordEmailTemplate } from "../utils/emailTemplates.js";
 import { generateToken } from "../utils/generateToken.js";
 import { sendSuccess } from "../utils/response.js";
+import { authCookieOptions } from "../utils/cookieOptions.js";
 
 export const registerUser = asyncHandler(async (req, res, next) => {
   const { name, email, password, role } = req.body;
@@ -56,8 +57,8 @@ export const login = asyncHandler(async (req, res, next) => {
 export const logout = asyncHandler(async (req, res) => {
   res
     .cookie("token", null, {
+      ...authCookieOptions,
       expires: new Date(Date.now()),
-      httpOnly: true,
     });
   sendSuccess(res, 200, "Logged out successfully");
 });
