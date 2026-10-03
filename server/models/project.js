@@ -89,6 +89,23 @@ const projectSchema = new mongoose.Schema(
 projectSchema.index({ student: 1 });
 projectSchema.index({ supervisor: 1 });
 projectSchema.index({ status: 1 });
+projectSchema.index(
+  { student: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: {
+        $in: [
+          "pending",
+          "approved",
+          "in_progress",
+          "revision_required",
+          "completed",
+        ],
+      },
+    },
+  },
+);
 
 export const Project =
   mongoose.models.Project || mongoose.model("Project", projectSchema);

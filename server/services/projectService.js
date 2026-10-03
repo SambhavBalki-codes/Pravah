@@ -8,13 +8,31 @@ export const getProjectByStudentId = async (studentId) => {
 export const getActiveProjectByStudentId = async (studentId) => {
   return await Project.findOne({
     student: studentId,
-    status: { $not: /^rejected$/i },
+    status: {
+      $in: [
+        "pending",
+        "approved",
+        "in_progress",
+        "revision_required",
+        "completed",
+      ],
+    },
   }).sort({ createdAt: -1 });
 };
 
 export const createProject = async (projectData) => {
   const newProject = new Project(projectData);
-  return await newProject.save();
+  try {
+    return await newProject.save();
+  } catch (error) {
+    if (error.code === 11000 && error.keyPattern?.student) {
+      throw new ErrorHandler(
+        "You already have an active project. Please wait for it to be rejected before submitting another proposal.",
+        400,
+      );
+    }
+    throw error;
+  }
 };
 
 export const getProjectById = async (projectId) => {
