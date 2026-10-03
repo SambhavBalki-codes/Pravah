@@ -5,6 +5,7 @@ import User from "../models/user.js";
 import * as userServices from "../services/userServices.js";
 import * as projectServices from "../services/projectService.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
+import { isValidProjectStatusTransition } from "../utils/projectStatus.js";
 
 export const createStudent = asyncHandler(async (req, res, next) => {
   const { name, email, password, department } = req.body;
@@ -179,6 +180,34 @@ export const getAllProjects = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Projects fetched successfully",
     data: { projects, pagination: getPaginationMeta(page, limit, total) },
+  });
+});
+
+export const updateProjectStatus = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params;
+  const { status } = req.body;
+  const project = await Project.findById(projectId);
+
+  if (!project) {
+    return next(new ErrorHandler("Project not found", 404));
+  }
+
+  if (!isValidProjectStatusTransition(project.status, status)) {
+    return next(
+      new ErrorHandler(
+        `Invalid project status transition from "${project.status}" to "${status}"`,
+        400,
+      ),
+    );
+  }
+
+  project.status = status;
+  await project.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Project status updated successfully",
+    data: { project },
   });
 });
 

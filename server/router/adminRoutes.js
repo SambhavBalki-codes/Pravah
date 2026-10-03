@@ -9,6 +9,7 @@ import {
   deleteTeacher,
   getAllUsers,
   getAllProjects,
+  updateProjectStatus,
 } from "../controllers/adminController.js";
 import { isAuthenticated ,isAuthorized} from "../middlewares/authMiddleware.js";
 import { body, param } from "express-validator";
@@ -58,6 +59,25 @@ router.get(
   isAuthenticated,
   isAuthorized("Admin"),
   getAllProjects,
+);
+
+router.put(
+  "/projects/:projectId/status",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  body("status")
+    .isIn([
+      "pending",
+      "approved",
+      "in_progress",
+      "revision_required",
+      "rejected",
+      "completed",
+    ])
+    .withMessage("must be a valid project status"),
+  validate,
+  updateProjectStatus,
 );
 
 
