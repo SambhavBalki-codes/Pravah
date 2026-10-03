@@ -38,6 +38,14 @@ supervisorRequestSchema.index(
     partialFilterExpression: { status: "pending" },
   },
 );
+supervisorRequestSchema.index(
+  { student: 1 },
+  {
+    name: "unique_pending_request_per_student",
+    unique: true,
+    partialFilterExpression: { status: "pending" },
+  },
+);
 
 export const supervisorRequest =
   mongoose.models.SupervisorRequest ||

@@ -31,7 +31,6 @@ router.post(
   body("name").trim().isLength({ min: 2, max: 50 }).withMessage("must be 2-50 characters"),
   email,
   password,
-  body("role").isIn(["Student", "Teacher", "Admin"]).withMessage("must be a valid role"),
   validate,
   registerUser,
 );

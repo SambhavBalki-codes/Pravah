@@ -66,9 +66,12 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
   const { projectID } = req.params;
   const studentId = req.user._id;
 
-  const project = await projectService.getProjectById(projectID);
+  const project = await projectService.getProjectByStudentIdAndProjectId(
+    studentId,
+    projectID,
+  );
 
-  if (!project || project.student.toString() !== studentId.toString()) {
+  if (!project) {
     return next(
       new ErrorHandler(
         "Project not found or you are not authorized to upload files for this project",
@@ -96,9 +99,12 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
 export const getProjectFiles = asyncHandler(async (req, res, next) => {
   const { projectId } = req.params;
   const studentId = req.user._id;
-  const project = await projectService.getProjectById(projectId);
+  const project = await projectService.getProjectByStudentIdAndProjectId(
+    studentId,
+    projectId,
+  );
 
-  if (!project || project.student.toString() !== studentId.toString()) {
+  if (!project) {
     return next(
       new ErrorHandler(
         "Project not found or you are not authorized to view its files",
@@ -259,9 +265,12 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
 export const getFeedback = asyncHandler(async (req, res, next) => {
   const { projectId } = req.params;
   const studentId = req.user._id;
-  const project = await projectService.getProjectById(projectId);
+  const project = await projectService.getProjectByStudentIdAndProjectId(
+    studentId,
+    projectId,
+  );
 
-  if (!project || project.student.toString() !== studentId.toString()) {
+  if (!project) {
     return next(
       new ErrorHandler(
         "Project not found or you are not authorized to view feedback for this project",
@@ -285,9 +294,12 @@ export const downloadFile = asyncHandler(async (req, res, next) => {
   const { projectId, fileId } = req.params;
   const studentId = req.user._id;
 
-  const project = await projectService.getProjectById(projectId);
+  const project = await projectService.getProjectByStudentIdAndProjectId(
+    studentId,
+    projectId,
+  );
 
-  if (!project || project.student.toString() !== studentId.toString()) {
+  if (!project) {
     return next(
       new ErrorHandler(
         "Project not found or you are not authorized to download files for this project",

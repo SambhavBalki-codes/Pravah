@@ -1,4 +1,6 @@
 import User from "../models/user.js";
+import { Project } from "../models/project.js";
+import { supervisorRequest } from "../models/supervisorRequest.js";
 import ErrorHandler from "../middlewares/error.js";
 
 export const createUser = async (userData) => {
@@ -37,6 +39,30 @@ export const deleteUser = async (id) => {
 
     if (!user) {
       throw new ErrorHandler("User not found", 404);
+    }
+
+    const [projectCount, requestCount] = await Promise.all([
+      user.role === "Student"
+        ? Project.countDocuments({ student: id })
+        : Project.countDocuments({ supervisor: id }),
+      supervisorRequest.countDocuments({
+        $or: [{ student: id }, { supervisor: id }],
+      }),
+    ]);
+
+    const hasAssignedStudents =
+      user.role === "Teacher" && user.assignedStudents.length > 0;
+
+    if (projectCount > 0 || requestCount > 0 || hasAssignedStudents) {
+      const dependency =
+        user.role === "Student"
+          ? "projects or supervisor requests"
+          : "supervised projects, assigned students, or supervisor requests";
+
+      throw new ErrorHandler(
+        `Cannot delete this ${user.role.toLowerCase()} while ${dependency} still exist. Reassign or remove these dependencies first.`,
+        409,
+      );
     }
 
     return await User.findByIdAndDelete(id);

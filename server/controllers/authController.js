@@ -9,9 +9,9 @@ import { sendSuccess } from "../utils/response.js";
 import { authCookieOptions } from "../utils/cookieOptions.js";
 
 export const registerUser = asyncHandler(async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!name || !email || !password || !role) {
+  if (!name || !email || !password) {
     return next(new ErrorHandler("Please provide all required fields", 400));
   }
 
@@ -20,7 +20,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("User already exists", 400));
   }
 
-  user = new User({ name, email, password, role });
+  user = new User({ name, email, password, role: "Student" });
   await user.save();
   generateToken(user, 201, "User registered successfully", res);
 });

@@ -45,6 +45,30 @@ export const getProjectById = async (projectId) => {
   return project;
 };
 
+export const getProjectByStudentIdAndProjectId = async (
+  studentId,
+  projectId,
+) => {
+  return await Project.findOne({
+    _id: projectId,
+    student: studentId,
+  })
+    .populate("student", "name email")
+    .populate("supervisor", "name email");
+};
+
+export const getProjectBySupervisorIdAndProjectId = async (
+  supervisorId,
+  projectId,
+) => {
+  return await Project.findOne({
+    _id: projectId,
+    supervisor: supervisorId,
+  })
+    .populate("student", "name email")
+    .populate("supervisor", "name email");
+};
+
 export const addFilesToProject = async (projectId, files) => {
   const project = await Project.findById(projectId);
 
