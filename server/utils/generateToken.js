@@ -13,8 +13,10 @@ export const generateToken = (user, statusCode, message, res) => {
     })
     .json({
       success: true,
-      user: userResponse,
       message,
-      token,
+      data: {
+        user: userResponse,
+        token,
+      },
     });
 };

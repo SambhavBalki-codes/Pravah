@@ -5,6 +5,7 @@ import User from "../models/user.js";
 import sendEmail from "../services/emailService.js";
 import { generateForgotPasswordEmailTemplate } from "../utils/emailTemplates.js";
 import { generateToken } from "../utils/generateToken.js";
+import { sendSuccess } from "../utils/response.js";
 
 export const registerUser = asyncHandler(async (req, res, next) => {
   const { name, email, password, role } = req.body;
@@ -54,23 +55,16 @@ export const login = asyncHandler(async (req, res, next) => {
 
 export const logout = asyncHandler(async (req, res) => {
   res
-    .status(200)
     .cookie("token", null, {
       expires: new Date(Date.now()),
       httpOnly: true,
-    })
-    .json({
-      success: true,
-      message: "Logged out successfully",
     });
+  sendSuccess(res, 200, "Logged out successfully");
 });
 
 export const getUser = asyncHandler(async (req, res, next) => {
   const user = req.user;
-  res.status(200).json({
-    success: true,
-    user,
-  });
+  sendSuccess(res, 200, "User fetched successfully", { user });
 });
 
 export const forgotPassword = asyncHandler(async (req, res, next) => {
@@ -92,10 +86,11 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
       text: message,
       html: message,
     });
-    res.status(200).json({
-      success: true,
-      message: `Email sent to ${user.email} successfully`,
-    });
+    sendSuccess(
+      res,
+      200,
+      `Email sent to ${user.email} successfully`,
+    );
   } catch (error) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;

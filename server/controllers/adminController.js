@@ -4,6 +4,7 @@ import ErrorHandler from "../middlewares/error.js";
 import User from "../models/user.js";
 import * as userServices from "../services/userServices.js";
 import * as projectServices from "../services/projectService.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export const createStudent = asyncHandler(async (req, res, next) => {
   const { name, email, password, department } = req.body;
@@ -62,6 +63,7 @@ export const deleteStudent = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Student deleted successfully",
+    data: {},
   });
 });
 
@@ -136,21 +138,28 @@ export const deleteTeacher = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Teacher deleted successfully",
+    data: {},
   });
 });
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
   try {
     const query = { role: { $in: ["Student", "Teacher"] } };
-    const users = await User.find(query)
+    const { page, limit, skip } = getPagination(req.query);
+    const [users, total] = await Promise.all([
+      User.find(query)
       .select("-password -resetPasswordToken -resetPasswordExpire")
       .populate("supervisor", "name email department")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+      User.countDocuments(query),
+    ]);
 
     res.status(200).json({
       success: true,
       message: "Users fetched succes sfully",
-      data: { users },
+      data: { users, pagination: getPaginationMeta(page, limit, total) },
     });
   } catch (error) {
     return next(
@@ -160,12 +169,16 @@ export const getAllUsers = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllProjects = asyncHandler(async (req, res, next) => {
-  const projects = await projectServices.getAllProjects();
+  const { page, limit } = getPagination(req.query);
+  const { projects, total } = await projectServices.getAllProjects({
+    page,
+    limit,
+  });
 
   res.status(200).json({
     success: true,
     message: "Projects fetched successfully",
-    data: { projects },
+    data: { projects, pagination: getPaginationMeta(page, limit, total) },
   });
 });
 

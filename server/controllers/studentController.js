@@ -7,6 +7,7 @@ import * as notificationService from "../services/notificationService.js";
 import { Project } from "../models/project.js";
 import { Notification } from "../models/notifications.js";
 import * as fileServices from "../services/fileServices.js";
+import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
 export const getStudentProject = asyncHandler(async (req, res, next) => {
   const studentID = req.user.id;
@@ -93,6 +94,33 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
     success: true,
     data: { project: updatedProject },
     message: "Files uploaded successfully",
+  });
+});
+
+export const getProjectFiles = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params;
+  const studentId = req.user._id;
+  const project = await projectService.getProjectById(projectId);
+
+  if (!project || project.student.toString() !== studentId.toString()) {
+    return next(
+      new ErrorHandler(
+        "Project not found or you are not authorized to view its files",
+        404,
+      ),
+    );
+  }
+
+  const { page, limit, skip } = getPagination(req.query);
+  const files = project.files.slice(skip, skip + limit);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      files,
+      pagination: getPaginationMeta(page, limit, project.files.length),
+    },
+    message: "Project files fetched successfully",
   });
 });
 

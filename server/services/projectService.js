@@ -44,9 +44,17 @@ export const addFilesToProject = async (projectId, files) => {
   return await project.save();
 };
 
-export const getAllProjects = async () => {
-  const projects = await Project.find()
-    .populate("supervisor", "name email department")
-    .populate("student", "name email");
-  return projects;
+export const getAllProjects = async ({ page = 1, limit = 10 } = {}) => {
+  const skip = (page - 1) * limit;
+  const [projects, total] = await Promise.all([
+    Project.find()
+      .populate("supervisor", "name email department")
+      .populate("student", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Project.countDocuments(),
+  ]);
+
+  return { projects, total };
 };

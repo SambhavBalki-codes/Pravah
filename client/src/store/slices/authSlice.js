@@ -6,7 +6,7 @@ export const login = createAsyncThunk("login", async (data, thunkAPI) => {
   try {
     const response = await axiosInstance.post("/auth/login", data);
     appToast.success(response.data.message);
-    return response.data;
+    return response.data.data;
   } catch (error) {
     const message =
       error.response?.data?.message ||
@@ -45,7 +45,7 @@ export const resetPassword = createAsyncThunk(
         },
       );
       appToast.success(response.data.message || "Password reset successful.");
-      return response.data.user;
+      return response.data.data.user;
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -59,7 +59,7 @@ export const resetPassword = createAsyncThunk(
 export const getUser = createAsyncThunk("auth/me", async (_, thunkAPI) => {
   try {
     const response = await axiosInstance.get("/auth/me");
-    return response.data.user;
+    return response.data.data.user;
   } catch (error) {
     const message =
       error.response?.data?.message || "Unable to fetch user details.";
