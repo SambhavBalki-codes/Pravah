@@ -13,7 +13,7 @@ const createAuthRateLimiter = (max, message) =>
   });
 
 export const loginRateLimiter = createAuthRateLimiter(
-  5,
+  100,
   "Too many login attempts. Please try again in 15 minutes.",
 );
 
