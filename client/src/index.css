@@ -82,9 +82,60 @@
   body {
     @apply bg-slate-50 text-slate-800 font-sans;
   }
+
+  select {
+    appearance: none;
+    background-color: hsl(var(--input));
+    background-image:
+      linear-gradient(45deg, transparent 50%, #64748b 50%),
+      linear-gradient(135deg, #64748b 50%, transparent 50%);
+    background-position:
+      calc(100% - 16px) 50%,
+      calc(100% - 11px) 50%;
+    background-repeat: no-repeat;
+    background-size: 5px 5px, 5px 5px;
+    padding-right: 2.5rem;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+
+  select:hover {
+    border-color: #94a3b8;
+  }
+
+  select:focus {
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgb(96 165 250 / 0.15);
+    outline: none;
+  }
 }
 
 @layer components {
+  .empty-state-icon-3d {
+    transform-style: preserve-3d;
+    animation: empty-state-float 4.5s ease-in-out infinite;
+    transition: transform 220ms ease, filter 220ms ease;
+  }
+
+  .empty-state-icon-3d:hover {
+    animation-play-state: paused;
+    filter: drop-shadow(0 12px 10px rgb(37 99 235 / 0.18));
+    transform: perspective(500px) rotateX(8deg) rotateY(-10deg) translateY(-4px) scale(1.04);
+  }
+
+  .empty-state-icon-3d svg {
+    filter: drop-shadow(2px 4px 0 rgb(37 99 235 / 0.12));
+    transform: translateZ(16px);
+  }
+
+  @keyframes empty-state-float {
+    0%, 100% {
+      transform: perspective(500px) rotateX(0deg) rotateY(-3deg) translateY(0);
+    }
+    50% {
+      transform: perspective(500px) rotateX(4deg) rotateY(3deg) translateY(-6px);
+    }
+  }
+
   .btn-primary {
     @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200 font-medium;
   }

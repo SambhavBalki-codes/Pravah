@@ -35,6 +35,12 @@ const projectSchema = new mongoose.Schema(
         "completed",
       ],
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxLength: [1000, "Rejection reason cannot exceed 1000 characters"],
+      default: null,
+    },
     files: [
       {
         fileType: {

@@ -96,7 +96,7 @@ export const getDashboardData = async () => {
         },
       },
     ]),
-    Deadline.find({ dueDate: { $gte: new Date() } })
+    Deadline.find({ dueDate: { $gte: new Date() }, isActive: { $ne: false } })
       .select("name dueDate project")
       .populate("project", "title")
       .sort({ dueDate: 1 })

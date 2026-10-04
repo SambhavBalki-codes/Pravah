@@ -12,6 +12,10 @@ const deadlineSchema = new mongoose.Schema(
       type: Date,
       required: [true, "Deadline due date is required"],
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -20,6 +24,11 @@ const deadlineSchema = new mongoose.Schema(
     project: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Project",
+      default: null,
+    },
+    student: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       default: null,
     },
   },

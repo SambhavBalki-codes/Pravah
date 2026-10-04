@@ -1,5 +1,6 @@
 import ErrorHandler from "../middlewares/error.js";
 import { Project } from "../models/project.js";
+import User from "../models/user.js";
 
 export const getProjectByStudentId = async (studentId) => {
   return await Project.findOne({ student: studentId }).sort({ createdAt: -1 });
@@ -37,8 +38,11 @@ export const createProject = async (projectData) => {
 
 export const getProjectById = async (projectId) => {
   const project = await Project.findById(projectId)
-    .populate("student", "name email")
+    .populate("student", "name email department")
     .populate("supervisor", "name email");
+  if (project) {
+    await project.populate("feedbacks.supervisorId", "name email");
+  }
   if (!project) {
     throw new ErrorHandler("Project not found", 404);
   }
@@ -86,16 +90,39 @@ export const addFilesToProject = async (projectId, files) => {
   return await project.save();
 };
 
-export const getAllProjects = async ({ page = 1, limit = 10 } = {}) => {
+export const getAllProjects = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+  status,
+  department,
+  supervisor,
+} = {}) => {
   const skip = (page - 1) * limit;
+  const query = {};
+  if (search.trim()) {
+    query.title = { $regex: search.trim(), $options: "i" };
+  }
+  if (status) query.status = status;
+  if (supervisor) query.supervisor = supervisor;
+
+  if (department) {
+    const students = await User.find({
+      role: "Student",
+      department,
+    }).select("_id").lean();
+    query.student = { $in: students.map((student) => student._id) };
+  }
+
   const [projects, total] = await Promise.all([
-    Project.find()
+    Project.find(query)
       .populate("supervisor", "name email department")
-      .populate("student", "name email")
+      .populate("student", "name email department")
+      .populate("feedbacks.supervisorId", "name email")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    Project.countDocuments(),
+    Project.countDocuments(query),
   ]);
 
   return { projects, total };

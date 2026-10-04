@@ -122,14 +122,80 @@ export const getAllUsers = createAsyncThunk(
 
 export const getAllProjects = createAsyncThunk(
   "admin/getAllProjects",
-  async (_, thunkAPI) => {
+  async (params = {}, thunkAPI) => {
     try {
-      const res = await axiosInstance.get("/admin/projects");
+      const res = await axiosInstance.get("/admin/projects", {
+        params: { limit: 100, ...params },
+      });
       return res.data.data;
     } catch (error) {
       const message =
         error.response?.data?.message ||
         "Failed to load projects. Please try again.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const getProjectDetails = createAsyncThunk(
+  "admin/getProjectDetails",
+  async (projectId, thunkAPI) => {
+    try {
+      const res = await axiosInstance.get(`/admin/projects/${projectId}`);
+      return res.data.data.project;
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to load project details.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const decideProject = createAsyncThunk(
+  "admin/decideProject",
+  async ({ projectId, status, rejectionReason }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/admin/projects/${projectId}/decision`, {
+        status,
+        rejectionReason,
+      });
+      appToast.success(res.data.message);
+      return res.data.data.project;
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to update project decision.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const assignProjectSupervisor = createAsyncThunk(
+  "admin/assignProjectSupervisor",
+  async ({ projectId, supervisorId }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/admin/projects/${projectId}/supervisor`, {
+        supervisorId,
+      });
+      appToast.success(res.data.message);
+      return res.data.data.project;
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to assign supervisor.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+);
+
+export const updateProjectStatus = createAsyncThunk(
+  "admin/updateProjectStatus",
+  async ({ projectId, status }, thunkAPI) => {
+    try {
+      const res = await axiosInstance.put(`/admin/projects/${projectId}/status`, { status });
+      appToast.success(res.data.message);
+      return res.data.data.project;
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to update project status.";
       appToast.error(message);
       return thunkAPI.rejectWithValue(message);
     }
@@ -165,6 +231,8 @@ const adminSlice = createSlice({
     dashboard: null,
     dashboardLoading: false,
     dashboardError: null,
+    projectsLoading: false,
+    selectedProject: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -216,6 +284,37 @@ const adminSlice = createSlice({
       })
       .addCase(getAllProjects.fulfilled, (state, action) => {
         state.projects = action.payload.projects;
+        state.projectsLoading = false;
+      })
+      .addCase(getAllProjects.pending, (state) => {
+        state.projectsLoading = true;
+      })
+      .addCase(getAllProjects.rejected, (state) => {
+        state.projectsLoading = false;
+      })
+      .addCase(getProjectDetails.fulfilled, (state, action) => {
+        state.selectedProject = action.payload;
+      })
+      .addCase(getProjectDetails.pending, (state) => {
+        state.selectedProject = null;
+      })
+      .addCase(decideProject.fulfilled, (state, action) => {
+        state.projects = state.projects.map((project) =>
+          project._id === action.payload._id ? { ...project, ...action.payload } : project,
+        );
+        state.selectedProject = action.payload;
+      })
+      .addCase(assignProjectSupervisor.fulfilled, (state, action) => {
+        state.projects = state.projects.map((project) =>
+          project._id === action.payload._id ? action.payload : project,
+        );
+        state.selectedProject = action.payload;
+      })
+      .addCase(updateProjectStatus.fulfilled, (state, action) => {
+        state.projects = state.projects.map((project) =>
+          project._id === action.payload._id ? { ...project, ...action.payload } : project,
+        );
+        state.selectedProject = action.payload;
       })
       .addCase(getDashboardStats.pending, (state) => {
         state.dashboardLoading = true;

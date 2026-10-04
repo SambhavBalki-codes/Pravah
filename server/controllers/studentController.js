@@ -6,6 +6,7 @@ import * as requestService from "../services/requestService.js";
 import * as notificationService from "../services/notificationService.js";
 import { Project } from "../models/project.js";
 import { Notification } from "../models/notifications.js";
+import { Deadline } from "../models/deadline.js";
 import * as fileServices from "../services/fileServices.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 
@@ -179,6 +180,23 @@ export const requestSupervisor = asyncHandler(async (req, res, next) => {
       new ErrorHandler("You already have a supervisor assigned", 400),
     );
   }
+  const activeProject = await Project.findOne({
+    student: studentId,
+    status: {
+      $in: [
+        "pending",
+        "approved",
+        "in_progress",
+        "revision_required",
+        "completed",
+      ],
+    },
+  }).select("supervisor");
+  if (activeProject?.supervisor) {
+    return next(
+      new ErrorHandler("Your project already has a supervisor assigned", 400),
+    );
+  }
 
   const supervisor = await User.findById(teacherId);
   if (!supervisor || supervisor.role !== "Teacher") {
@@ -225,12 +243,20 @@ export const getDashboardStats = asyncHandler(async (req, res, next) => {
     .lean();
 
   const now = new Date();
-  const upcomingDeadlines = await Project.find({
-    student: studentId,
-    deadline: { $gte: now },
+  const deadlineScope = [
+    { project: null, student: null },
+    { student: studentId },
+  ];
+  if (project?._id) deadlineScope.push({ project: project._id });
+
+  const upcomingDeadlines = await Deadline.find({
+    isActive: { $ne: false },
+    dueDate: { $gte: now },
+    $or: deadlineScope,
   })
-    .select("title description")
-    .sort({ deadline: 1 })
+    .select("name dueDate project student")
+    .populate("project", "title")
+    .sort({ dueDate: 1 })
     .limit(3)
     .lean();
 

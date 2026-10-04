@@ -9,7 +9,9 @@ export const projectStatuses = [
 
 const allowedTransitions = {
   pending: ["approved", "rejected"],
-  approved: ["in_progress"],
+  approved: ["in_progress", "rejected"],
+  in_progress: ["revision_required", "completed", "rejected"],
+  revision_required: ["in_progress", "rejected"],
   in_progress: ["revision_required", "completed"],
   revision_required: ["in_progress"],
   rejected: [],

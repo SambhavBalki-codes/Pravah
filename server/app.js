@@ -8,6 +8,7 @@ import authRouter from "./router/userRoutes.js";
 import adminRouter from "./router/adminRoutes.js";
 import studentRouter from "./router/studentRoutes.js";
 import notificationRouter from "./router/notificationRoutes.js";
+import teacherRouter from "./router/teacherRoutes.js";
 import { fileURLToPath } from "url";
 import path, { dirname } from "path";
 import fs from "fs";
@@ -24,7 +25,7 @@ const app = express();
 app.use(
   cors({
     origin: [process.env.FRONTEND_URL],
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   }),
 );
@@ -47,6 +48,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/student", studentRouter);
+app.use("/api/v1/teacher", teacherRouter);
 app.use("/api/v1/notifications", notificationRouter);
 app.use(errorMiddleware);
 export default app;
