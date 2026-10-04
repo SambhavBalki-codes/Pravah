@@ -4,9 +4,9 @@ import appToast from "../../lib/toast";
 
 export const getSupervisorRequests = createAsyncThunk(
   "request/getSupervisorRequests",
-  async (_, thunkAPI) => {
+  async (status = "pending", thunkAPI) => {
     try {
-      const response = await axiosInstance.get("/teacher/requests");
+      const response = await axiosInstance.get("/teacher/requests", { params: { status } });
       return response.data.data.requests;
     } catch (error) {
       const message = error.response?.data?.message || "Failed to load supervisor requests.";
@@ -18,11 +18,11 @@ export const getSupervisorRequests = createAsyncThunk(
 
 export const respondToSupervisorRequest = createAsyncThunk(
   "request/respondToSupervisorRequest",
-  async ({ requestId, decision }, thunkAPI) => {
+  async ({ requestId, decision, rejectionReason }, thunkAPI) => {
     try {
-      const response = await axiosInstance.put(`/teacher/requests/${requestId}/${decision}`);
+      const response = await axiosInstance.put(`/teacher/requests/${requestId}/${decision}`, decision === "reject" ? { rejectionReason } : {});
       appToast.success(response.data.message);
-      return requestId;
+      return response.data.data.request || { _id: requestId, status: decision === "accept" ? "accepted" : "rejected", rejectionReason };
     } catch (error) {
       const message = error.response?.data?.message || "Failed to respond to supervisor request.";
       appToast.error(message);
@@ -50,7 +50,9 @@ const requestSlice = createSlice({
         state.error = action.payload;
       })
       .addCase(respondToSupervisorRequest.fulfilled, (state, action) => {
-        state.list = state.list.filter((request) => request._id !== action.payload);
+        state.list = state.list.map((request) =>
+          request._id === action.payload._id ? { ...request, ...action.payload } : request,
+        );
       });
   },
 });

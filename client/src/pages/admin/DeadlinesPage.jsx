@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   UserRound,
   Trash2,
+  X,
 } from "lucide-react";
 import {
   createDeadline,
@@ -23,7 +24,7 @@ import {
 } from "../../store/slices/deadlineSlice";
 import { getAllProjects, getAllUsers } from "../../store/slices/adminSlice";
 
-const emptyForm = { name: "", dueDate: "", scope: "global", project: "", student: "" };
+const emptyForm = { name: "", dueDate: "", scope: "global", project: "", student: "", projects: [], students: [] };
 
 const toInputDate = (date) => {
   const value = new Date(date);
@@ -78,8 +79,16 @@ const DeadlinesPage = () => {
   }, [form.scope, projects, scopeSearch, students]);
 
   const selectedScope = form.scope === "student"
-    ? students.find((student) => student._id === form.student)
-    : projects.find((project) => project._id === form.project);
+    ? students.find((student) => student._id === (form.students?.[0] || form.student))
+    : projects.find((project) => project._id === (form.projects?.[0] || form.project));
+  const selectedStudentIds = form.students?.length ? form.students : form.student ? [form.student] : [];
+  const selectedStudents = selectedStudentIds
+    .map((studentId) => students.find((student) => student._id === studentId))
+    .filter(Boolean);
+  const selectedProjectIds = form.projects?.length ? form.projects : form.project ? [form.project] : [];
+  const selectedProjects = selectedProjectIds
+    .map((projectId) => projects.find((project) => project._id === projectId))
+    .filter(Boolean);
   const selectedDate = form.dueDate ? form.dueDate.slice(0, 10) : "";
   const selectedTime = form.dueDate ? form.dueDate.slice(11, 16) : "09:00";
   const calendarDays = useMemo(() => {
@@ -126,17 +135,24 @@ const DeadlinesPage = () => {
 
   const submit = (event) => {
     event.preventDefault();
-    const payload = {
-      name: form.name,
-      dueDate: form.dueDate,
-      project: form.scope === "project" ? form.project : null,
-      student: form.scope === "student" ? form.student : null,
-    };
-    const request = editingId
-      ? dispatch(updateDeadline({ id: editingId, data: payload }))
-      : dispatch(createDeadline(payload));
-    request.then((action) => {
-      if (action.meta.requestStatus === "fulfilled") closeForm();
+    const targets = form.scope === "student"
+      ? selectedStudentIds.map((studentId) => ({ student: studentId, project: null }))
+      : form.scope === "project"
+        ? selectedProjectIds.map((projectId) => ({ student: null, project: projectId }))
+        : [{ student: null, project: null }];
+    const requests = targets.map(({ student, project }) => {
+      const payload = {
+        name: form.name,
+        dueDate: form.dueDate,
+        project,
+        student,
+      };
+      return editingId
+        ? dispatch(updateDeadline({ id: editingId, data: payload }))
+        : dispatch(createDeadline(payload));
+    });
+    Promise.all(requests).then((actions) => {
+      if (actions.every((action) => action.meta.requestStatus === "fulfilled")) closeForm();
     });
   };
 
@@ -148,6 +164,8 @@ const DeadlinesPage = () => {
       scope: deadline.student ? "student" : deadline.project ? "project" : "global",
       project: deadline.project?._id || deadline.project || "",
       student: deadline.student?._id || deadline.student || "",
+      projects: deadline.project?._id ? [deadline.project._id] : [],
+      students: deadline.student?._id ? [deadline.student._id] : [],
     });
     setCalendarMonth(new Date(deadline.dueDate));
     setShowForm(true);
@@ -202,18 +220,18 @@ const DeadlinesPage = () => {
             </div>
             <fieldset>
               <legend className="mb-1.5 block text-sm font-medium text-slate-700">Send deadline to</legend>
-              <div className="grid grid-cols-3 gap-2">{[["global", "Everyone", Globe2], ["student", "Student", UserRound], ["project", "Project", Edit3]].map(([value, label, Icon]) => { const ScopeIcon = Icon; return <button key={value} type="button" onClick={() => { setForm({ ...form, scope: value, project: "", student: "" }); setScopeSearch(""); setScopePickerOpen(value !== "global"); }} className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-[11px] font-semibold transition ${form.scope === value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}><ScopeIcon size={16} />{label}</button>; })}</div>
+              <div className="grid grid-cols-3 gap-2">              {[["global", "Everyone", Globe2], ["student", "Student", UserRound], ["project", "Project", Edit3]].map(([value, label, Icon]) => { const ScopeIcon = Icon; return <button key={value} type="button" onClick={() => { setForm({ ...form, scope: value, project: "", student: "", projects: [], students: [] }); setScopeSearch(""); setScopePickerOpen(value !== "global"); }} className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 text-[11px] font-semibold transition ${form.scope === value ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 text-slate-500 hover:border-slate-300"}`}><ScopeIcon size={16} />{label}</button>; })}</div>
               {selectedScope && form.scope !== "global" && (
                 <div className="mt-4 flex min-w-0 items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-3 shadow-sm ring-1 ring-emerald-100">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
                     {form.scope === "student" ? <UserRound size={14} /> : <Edit3 size={14} />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-slate-800">{form.scope === "student" ? selectedScope.name : selectedScope.title}</p>
-                    <p className="truncate text-[11px] text-slate-500">{form.scope === "student" ? selectedScope.email : selectedScope.student?.name || "Project scope"}</p>
+                    <p className="truncate text-xs font-bold text-slate-800">{form.scope === "student" ? `${selectedStudents.length} student${selectedStudents.length === 1 ? "" : "s"} selected` : `${selectedProjects.length} project${selectedProjects.length === 1 ? "" : "s"} selected`}</p>
+                    <p className="truncate text-[11px] text-slate-500">{form.scope === "student" ? selectedStudents.map((student) => student.name).join(", ") : selectedProjects.map((project) => project.title).join(", ")}</p>
                   </div>
                   <span className="mr-1 shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Selected</span>
-                  <button type="button" onClick={() => { setForm({ ...form, project: "", student: "" }); setScopePickerOpen(true); }} className="shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700">Change</button>
+                  <button type="button" onClick={() => { setForm({ ...form, project: "", student: "", projects: [], students: [] }); setScopePickerOpen(true); }} className="shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700">Change</button>
                 </div>
               )}
             </fieldset>
@@ -403,20 +421,89 @@ const DeadlinesPage = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" role="dialog" aria-modal="true">
             <div className="flex max-h-[min(620px,calc(100vh-2rem))] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-5">
-                <div><p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Deadline scope</p><h2 className="mt-1 text-xl font-bold text-slate-800">Select {form.scope}</h2><p className="mt-1 text-sm text-slate-500">Search by {form.scope === "student" ? "name, email, or department" : "project title or student name"}.</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Deadline scope</p><h2 className="mt-1 text-xl font-bold text-slate-800">Select {form.scope === "student" ? "students" : "projects"}</h2><p className="mt-1 text-sm text-slate-500">{form.scope === "student" ? "Select one or more students. Click a selected name to remove it." : "Select one or more projects. Click a selected name to remove it."}</p></div>
                 <button type="button" onClick={() => setScopePickerOpen(false)} className="rounded-lg px-2 py-1 text-sm font-semibold text-slate-500 hover:bg-slate-100">Close</button>
               </div>
               <div className="border-b border-slate-100 p-4">
+                {form.scope === "student" && selectedStudents.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Selected students">
+                    {selectedStudents.map((student) => (
+                      <span key={student._id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-blue-50 py-1 pl-3 pr-1 text-xs font-semibold text-blue-700">
+                        <span className="max-w-[180px] truncate">{student.name}</span>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${student.name}`}
+                          onClick={() => {
+                            const nextIds = selectedStudentIds.filter((id) => id !== student._id);
+                            setForm({ ...form, student: nextIds[0] || "", students: nextIds });
+                          }}
+                          className="rounded-full p-1 hover:bg-blue-100"
+                        >
+                          <X size={13} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {form.scope === "project" && selectedProjects.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2" aria-label="Selected projects">
+                    {selectedProjects.map((project) => (
+                      <span key={project._id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-blue-50 py-1 pl-3 pr-1 text-xs font-semibold text-blue-700">
+                        <span className="max-w-[180px] truncate">{project.title}</span>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${project.title}`}
+                          onClick={() => {
+                            const nextIds = selectedProjectIds.filter((id) => id !== project._id);
+                            setForm({ ...form, project: nextIds[0] || "", projects: nextIds });
+                          }}
+                          className="rounded-full p-1 hover:bg-blue-100"
+                        >
+                          <X size={13} />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="relative"><Search className="absolute left-3 top-2.5 text-slate-400" size={16} /><input autoFocus className="input pl-9" placeholder={`Search ${form.scope}`} value={scopeSearch} onChange={(event) => setScopeSearch(event.target.value)} /></div>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-3">
                 {scopeOptions.length ? scopeOptions.map((item) => (
-                  <button key={item._id} type="button" onClick={() => { setForm({ ...form, project: form.scope === "project" ? item._id : "", student: form.scope === "student" ? item._id : "" }); setScopePickerOpen(false); setScopeSearch(""); }} className="flex w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-left hover:bg-blue-50">
+                  <button
+                    key={item._id}
+                    type="button"
+                    onClick={() => {
+                      if (form.scope === "student") {
+                        const nextIds = selectedStudentIds.includes(item._id)
+                          ? selectedStudentIds.filter((id) => id !== item._id)
+                          : [...selectedStudentIds, item._id];
+                        setForm({ ...form, student: nextIds[0] || "", students: nextIds });
+                        setScopeSearch("");
+                      } else {
+                        const nextIds = selectedProjectIds.includes(item._id)
+                          ? selectedProjectIds.filter((id) => id !== item._id)
+                          : [...selectedProjectIds, item._id];
+                        setForm({ ...form, project: nextIds[0] || "", projects: nextIds, student: "", students: [] });
+                        setScopeSearch("");
+                      }
+                    }}
+                    className={`flex w-full items-center justify-between gap-4 rounded-xl px-4 py-3 text-left ${(form.scope === "student" ? selectedStudentIds : selectedProjectIds).includes(item._id) ? "bg-blue-50 hover:bg-blue-100" : "hover:bg-slate-50"}`}
+                  >
                     <span className="min-w-0"><span className="block truncate font-semibold text-slate-700">{form.scope === "student" ? item.name : item.title}</span><span className="mt-1 block truncate text-xs text-slate-500">{form.scope === "student" ? `${item.email} · ${item.department || "No department"}` : item.student?.name || "Project"}</span></span>
-                    <span className="shrink-0 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">Select</span>
+                    <span className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold ${(form.scope === "student" ? selectedStudentIds : selectedProjectIds).includes(item._id) ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700"}`}>
+                      {(form.scope === "student" ? selectedStudentIds : selectedProjectIds).includes(item._id) ? "Selected" : "Select"}
+                    </span>
                   </button>
                 )) : <div className="p-10 text-center text-sm text-slate-500">No matching {form.scope}s found.</div>}
               </div>
+              {form.scope !== "global" && (
+                <div className="flex items-center justify-between border-t border-slate-100 p-4">
+                  <span className="text-xs text-slate-500">
+                    {form.scope === "student" ? selectedStudents.length : selectedProjects.length} {form.scope === "student" ? "student" : "project"}{(form.scope === "student" ? selectedStudents.length : selectedProjects.length) === 1 ? "" : "s"} selected
+                  </span>
+                  <button type="button" onClick={() => setScopePickerOpen(false)} className="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Done</button>
+                </div>
+              )}
             </div>
           </div>
         )}

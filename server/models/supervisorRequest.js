@@ -18,6 +18,12 @@ const supervisorRequestSchema = new mongoose.Schema(
       required: [true, "Message is required"],
       maxLength: [250, "Message cannot exceed 250 characters"],
     },
+    rejectionReason: {
+      type: String,
+      trim: true,
+      maxLength: [500, "Rejection reason cannot exceed 500 characters"],
+      default: null,
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],
