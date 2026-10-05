@@ -9,6 +9,14 @@ import { Deadline } from "../models/deadline.js";
 import * as fileServices from "../services/fileServices.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 import { isValidProjectStatusTransition } from "../utils/projectStatus.js";
+import {
+  serializeFile,
+  serializeFeedback,
+  getLastFile,
+  getLastFeedbackDate,
+  countPendingFiles,
+  getProgressState,
+} from "../utils/projectProgress.js";
 
 const teacherProjectQuery = (teacherId, projectId) => ({
   _id: projectId,
@@ -24,7 +32,12 @@ const populateProject = (query) =>
 export const getSupervisorRequests = asyncHandler(async (req, res) => {
   const { status = "pending" } = req.query;
   const query = { supervisor: req.user._id };
-  if (status !== "all") query.status = ["pending", "accepted", "rejected"].includes(status) ? status : "pending";
+    query.status =
+    status === "all"
+      ? { $ne: "cancelled" }
+      : ["pending", "accepted", "rejected"].includes(status)
+        ? status
+        : "pending";
 
   const requestDocuments = await supervisorRequest.find(query)
     .populate("student", "name email department")
@@ -169,26 +182,80 @@ export const getTeacherDashboard = asyncHandler(async (req, res) => {
     },
   });
 });
+//here
+// Next upcoming deadline per project: earliest of project-specific, student-specific and global
+const loadNextDeadlines = async (projects) => {
+  const map = new Map();
+  if (!projects.length) return map;
+
+  const rows = await Deadline.find({
+    isActive: { $ne: false },
+    dueDate: { $gte: new Date() },
+    $or: [
+      { project: { $in: projects.map((p) => p._id) } },
+      { student: { $in: projects.map((p) => p.student) } },
+      { project: null, student: null },
+    ],
+  })
+    .sort({ dueDate: 1 })
+    .lean();
+
+  for (const p of projects) {
+    const match = rows.find(
+      (d) =>
+        (d.project && String(d.project) === String(p._id)) ||
+        (d.student && String(d.student) === String(p.student)) ||
+        (!d.project && !d.student),
+    );
+    if (match) map.set(String(p._id), { _id: match._id, name: match.name, dueDate: match.dueDate });
+  }
+  return map;
+};
 
 export const getAssignedStudents = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
   const teacher = await User.findById(req.user._id).select("assignedStudents").lean();
-  const studentIds = teacher?.assignedStudents || [];
+  const filter = { _id: { $in: teacher?.assignedStudents || [] }, role: "Student" };
+
   const [students, total] = await Promise.all([
-    User.find({ _id: { $in: studentIds }, role: "Student" })
-      .select("name email department supervisor project")
-      .populate("project", "title status")
-      .sort({ name: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean(),
-    User.countDocuments({ _id: { $in: studentIds }, role: "Student" }),
+    User.find(filter).select("name email department").sort({ name: 1 }).skip(skip).limit(limit).lean(),
+    User.countDocuments(filter),
   ]);
+
+  const projects = await Project.find({
+    student: { $in: students.map((s) => s._id) },
+    supervisor: req.user._id,
+    status: { $ne: "rejected" },
+  })
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const projectByStudent = new Map();
+  projects.forEach((p) => {
+    if (!projectByStudent.has(String(p.student))) projectByStudent.set(String(p.student), p);
+  });
+  const deadlineMap = await loadNextDeadlines([...projectByStudent.values()]);
+
+  const rows = students.map((student) => {
+    const project = projectByStudent.get(String(student._id)) || null;
+    const files = project?.files || [];
+    const lastFile = getLastFile(files);
+    return {
+      student,
+      project: project ? { _id: project._id, title: project.title, status: project.status } : null,
+      progressState: getProgressState(project),
+      fileCount: files.length,
+      pendingReviewCount: countPendingFiles(files),
+      lastUpload: lastFile ? serializeFile(lastFile) : null,
+      lastFeedbackAt: getLastFeedbackDate(project?.feedbacks || []),
+      nextDeadline: project ? deadlineMap.get(String(project._id)) || null : null,
+    };
+  });
 
   res.status(200).json({
     success: true,
     message: "Assigned students fetched successfully",
-    data: { students, pagination: getPaginationMeta(page, limit, total) },
+    data: { students: rows, pagination: getPaginationMeta(page, limit, total) },
   });
 });
 
@@ -198,17 +265,186 @@ export const getAssignedStudent = asyncHandler(async (req, res, next) => {
     role: "Student",
     supervisor: req.user._id,
   })
-    .select("name email department supervisor project")
-    .populate("project", "title description status files feedbacks deadline")
+    .select("name email department")
     .lean();
   if (!student) return next(new ErrorHandler("Student not found", 404));
+
+  const project = await Project.findOne({
+    student: student._id,
+    supervisor: req.user._id,
+    status: { $ne: "rejected" },
+  })
+    .sort({ createdAt: -1 })
+    .populate("feedbacks.supervisorId", "name email")
+    .lean();
+
+  const nextDeadline = project
+    ? (await loadNextDeadlines([project])).get(String(project._id)) || null
+    : null;
+
+  const byNewest = (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
 
   res.status(200).json({
     success: true,
     message: "Assigned student fetched successfully",
-    data: { student },
+    data: {
+      student,
+      progressState: getProgressState(project),
+      nextDeadline,
+      project: project
+        ? {
+            _id: project._id,
+            title: project.title,
+            description: project.description,
+            status: project.status,
+            createdAt: project.createdAt,
+            files: (project.files || [])
+              .map(serializeFile)
+              .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0)),
+            feedbacks: (project.feedbacks || []).map(serializeFeedback).sort(byNewest),
+          }
+        : null,
+    },
   });
 });
+
+export const getTeacherFiles = asyncHandler(async (req, res) => {
+  const projects = await Project.find({ supervisor: req.user._id })
+    .select("title status student files")
+    .populate("student", "name email department")
+    .lean();
+
+  const files = projects
+    .flatMap((p) =>
+      (p.files || []).map((f) => ({
+        ...serializeFile(f),
+        projectId: p._id,
+        projectTitle: p.title,
+        student: p.student,
+      })),
+    )
+    .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0));
+
+  res.status(200).json({
+    success: true,
+    message: "Files fetched successfully",
+    data: {
+      files,
+      summary: {
+        total: files.length,
+        pending: files.filter((f) => f.reviewStatus === "pending").length,
+        reviewed: files.filter((f) => f.reviewStatus === "reviewed").length,
+        revisionRequested: files.filter((f) => f.reviewStatus === "revision_requested").length,
+      },
+    },
+  });
+});
+
+export const reviewTeacherFile = asyncHandler(async (req, res, next) => {
+  const { projectId, fileId } = req.params;
+  const { action } = req.body;
+  const message = req.body.message?.trim() || "";
+
+  const project = await Project.findOne(teacherProjectQuery(req.user._id, projectId));
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+  const file = project.files.id(fileId);
+  if (!file) return next(new ErrorHandler("File not found", 404));
+
+  if (action === "revision_requested" && message.length < 2) {
+    return next(new ErrorHandler("Please describe what needs to be revised", 400));
+  }
+
+  file.reviewStatus = action;
+  file.reviewedAt = new Date();
+
+  if (action === "revision_requested") {
+    project.feedbacks.push({
+      supervisorId: req.user._id,
+      type: "negative",
+      title: `Revision requested: ${file.originalName}`.slice(0, 100),
+      message,
+      requiresRevision: true,
+      fileId: file._id,
+    });
+    if (isValidProjectStatusTransition(project.status, "revision_required")) {
+      project.status = "revision_required";
+    }
+  }
+
+  await project.save();
+
+  await notificationService.notifyUser(
+    project.student,
+    action === "reviewed"
+      ? `Your file "${file.originalName}" was reviewed by your supervisor.`
+      : `Your supervisor requested a revision on "${file.originalName}".`,
+    "feedback",
+    "/student/feedback",
+    action === "reviewed" ? "medium" : "high",
+  );
+
+  res.status(200).json({
+    success: true,
+    message: action === "reviewed" ? "File marked as reviewed" : "Revision requested",
+    data: { reviewStatus: file.reviewStatus, projectStatus: project.status },
+  });
+});
+
+export const addProjectFeedback = asyncHandler(async (req, res, next) => {
+  const { type = "general", title, message, fileId } = req.body;
+  const requiresRevision = req.body.requiresRevision === true || req.body.requiresRevision === "true";
+
+  const project = await Project.findOne(teacherProjectQuery(req.user._id, req.params.id));
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+
+  let file = null;
+  if (fileId) {
+    file = project.files.id(fileId);
+    if (!file) return next(new ErrorHandler("File not found on this project", 400));
+  }
+
+  project.feedbacks.push({
+    supervisorId: req.user._id,
+    type,
+    title: title.trim(),
+    message: message.trim(),
+    requiresRevision,
+    ...(file ? { fileId: file._id } : {}),
+  });
+
+  if (requiresRevision) {
+    if (file) {
+      file.reviewStatus = "revision_requested";
+      file.reviewedAt = new Date();
+    }
+    if (isValidProjectStatusTransition(project.status, "revision_required")) {
+      project.status = "revision_required";
+    }
+  }
+
+  await project.save();
+
+  await notificationService.notifyUser(
+    project.student,
+    requiresRevision
+      ? `Your supervisor added feedback to "${project.title}" and requested a revision.`
+      : `Your supervisor added feedback to "${project.title}".`,
+    "feedback",
+    "/student/feedback",
+    requiresRevision ? "high" : "medium",
+  );
+
+  res.status(201).json({
+    success: true,
+    message: "Feedback added successfully",
+    data: {
+      feedback: project.feedbacks[project.feedbacks.length - 1],
+      projectStatus: project.status,
+    },
+  });
+});
+
+
 
 export const getTeacherProjects = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
@@ -261,27 +497,7 @@ export const downloadTeacherProjectFile = asyncHandler(async (req, res, next) =>
   fileServices.streamDownload(file.fileUrl, res, file.originalName, next);
 });
 
-export const addProjectFeedback = asyncHandler(async (req, res, next) => {
-  const { type = "general", title, message } = req.body;
-  const project = await Project.findOne(teacherProjectQuery(req.user._id, req.params.id));
-  if (!project) return next(new ErrorHandler("Project not found", 404));
 
-  project.feedbacks.push({ supervisorId: req.user._id, type, title: title.trim(), message: message.trim() });
-  await project.save();
-  await notificationService.notifyUser(
-    project.student,
-    `Your supervisor added feedback to "${project.title}".`,
-    "feedback",
-    `/student/feedback/${project._id}`,
-    "medium",
-  );
-
-  res.status(201).json({
-    success: true,
-    message: "Feedback added successfully",
-    data: { feedback: project.feedbacks[project.feedbacks.length - 1] },
-  });
-});
 
 export const updateTeacherProjectStatus = asyncHandler(async (req, res, next) => {
   const project = await Project.findOne(teacherProjectQuery(req.user._id, req.params.id));
@@ -327,5 +543,46 @@ export const getTeacherDeadlines = asyncHandler(async (req, res) => {
     success: true,
     message: "Teacher deadlines fetched successfully",
     data: { deadlines },
+  });
+});
+
+
+export const replyToStudentFeedback = asyncHandler(async (req, res, next) => {
+  const { projectId, feedbackId } = req.params;
+
+  const project = await Project.findOne(teacherProjectQuery(req.user._id, projectId));
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+
+  const feedback = project.feedbacks.id(feedbackId);
+  if (!feedback) return next(new ErrorHandler("Feedback not found", 404));
+  if (feedback.replies.length >= 50) {
+    return next(new ErrorHandler("This conversation has reached its reply limit", 400));
+  }
+
+  feedback.replies.push({
+    author: req.user._id,
+    role: "Teacher",
+    message: req.body.message.trim(),
+  });
+  // Show it as new to the student
+  feedback.isRead = false;
+  feedback.readAt = null;
+  await project.save();
+
+  await notificationService.notifyUser(
+    project.student,
+    `Your supervisor replied on "${feedback.title}".`,
+    "feedback",
+    "/student/feedback",
+    "medium",
+  );
+
+  const reply = feedback.replies[feedback.replies.length - 1];
+  res.status(201).json({
+    success: true,
+    message: "Reply sent",
+    data: {
+      reply: { _id: reply._id, role: reply.role, message: reply.message, createdAt: reply.createdAt },
+    },
   });
 });

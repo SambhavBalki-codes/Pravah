@@ -19,6 +19,7 @@ import TeacherFiles from "./pages/teacher/TeacherFiles";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageStudents from "./pages/admin/ManageStudents";
 import ManageTeachers from "./pages/admin/ManageTeachers";
+import StudentDetail from "./pages/teacher/StudentDetail";
 import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
@@ -120,6 +121,7 @@ const App = () => {
           <Route path="pending-requests" element={<PendingRequests />} />
           <Route path="assigned-students" element={<AssignedStudents />} />
           <Route path="files" element={<TeacherFiles />} />
+          <Route path="assigned-students/:id" element={<StudentDetail />} />
         </Route>
 
         <Route

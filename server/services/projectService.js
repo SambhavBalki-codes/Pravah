@@ -77,16 +77,31 @@ export const addFilesToProject = async (projectId, files) => {
   const project = await Project.findById(projectId);
 
   if (!project) {
-    throw new Error("Project not found");
+    throw new ErrorHandler("Project not found", 404);
   }
 
-  const fileMetadata = files.map((file) => ({
-    fileType: file.mimetype,
-    fileUrl: file.path,
-    originalName: file.originalname,
-  }));
+  // A file with the same name as an earlier upload becomes its next version
+  files.forEach((file) => {
+    const sameName = project.files.filter((f) => f.originalName === file.originalname);
+    const version = sameName.length
+      ? Math.max(...sameName.map((f) => f.version || 1)) + 1
+      : 1;
 
-  project.files.push(...fileMetadata);
+    project.files.push({
+      fileType: file.mimetype,
+      fileUrl: file.path,
+      originalName: file.originalname,
+      fileSize: file.size,
+      reviewStatus: "pending",
+      version,
+    });
+  });
+
+  // First upload starts the work. A re-upload after a revision request resumes it.
+  if (["approved", "revision_required"].includes(project.status)) {
+    project.status = "in_progress";
+  }
+
   return await project.save();
 };
 

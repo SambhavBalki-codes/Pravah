@@ -17,6 +17,9 @@ import {
   addProjectFeedback,
   updateTeacherProjectStatus,
   getTeacherDeadlines,
+  getTeacherFiles,
+  reviewTeacherFile,
+  replyToStudentFeedback
 } from "../controllers/teacherController.js";
 
 const router = express.Router();
@@ -62,6 +65,7 @@ router.get(
   validate,
   downloadTeacherProjectFile,
 );
+
 router.post(
   "/projects/:id/feedback",
   isAuthenticated,
@@ -70,9 +74,12 @@ router.post(
   body("type").optional().isIn(["general", "positive", "negative"]).withMessage("must be a valid feedback type"),
   body("title").trim().isLength({ min: 2, max: 100 }).withMessage("must be 2-100 characters"),
   body("message").trim().isLength({ min: 1, max: 1000 }).withMessage("must be 1-1000 characters"),
+  body("requiresRevision").optional().isBoolean().withMessage("must be true or false"),
+  body("fileId").optional().isMongoId().withMessage("must be a valid file id"),
   validate,
   addProjectFeedback,
 );
+
 router.put(
   "/projects/:id/status",
   isAuthenticated,
@@ -84,5 +91,29 @@ router.put(
   updateTeacherProjectStatus,
 );
 router.get("/deadlines", isAuthenticated, isAuthorized("Teacher"), getTeacherDeadlines);
+
+router.get("/files", isAuthenticated, isAuthorized("Teacher"), getTeacherFiles);
+router.put(
+  "/projects/:projectId/files/:fileId/review",
+  isAuthenticated,
+  isAuthorized("Teacher"),
+  fileProjectId,
+  fileId,
+  body("action").isIn(["reviewed", "revision_requested"]).withMessage("must be reviewed or revision_requested"),
+  body("message").optional().trim().isLength({ max: 1000 }).withMessage("must not exceed 1000 characters"),
+  validate,
+  reviewTeacherFile,
+);
+
+router.post(
+  "/projects/:projectId/feedback/:feedbackId/reply",
+  isAuthenticated,
+  isAuthorized("Teacher"),
+  fileProjectId,
+  param("feedbackId").isMongoId().withMessage("must be a valid feedback id"),
+  body("message").trim().isLength({ min: 1, max: 1000 }).withMessage("must be 1-1000 characters"),
+  validate,
+  replyToStudentFeedback,
+);
 
 export default router;

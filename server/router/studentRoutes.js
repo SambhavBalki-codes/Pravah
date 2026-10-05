@@ -10,6 +10,14 @@ import {
   getDashboardStats,
   downloadFile,
   getProjectFiles,
+  getFeedbackHistory,
+  markFeedbackRead,
+  markAllFeedbackRead,
+  getMyRequests,
+  cancelSupervisorRequest,
+  getMyFiles,
+  deleteMyFile,
+  replyToFeedback
 } from "../controllers/studentController.js";
 import {
   isAuthenticated,
@@ -101,6 +109,58 @@ router.get(
   param("fileId").isMongoId().withMessage("must be a valid file id"),
   validate,
   downloadFile,
+);
+
+router.get(
+  "/feedback-history",
+  isAuthenticated,
+  isAuthorized("Student"),
+  getFeedbackHistory,
+);
+router.put(
+  "/feedback/read-all",
+  isAuthenticated,
+  isAuthorized("Student"),
+  markAllFeedbackRead,
+);
+router.put(
+  "/feedback/:feedbackId/read",
+  isAuthenticated,
+  isAuthorized("Student"),
+  param("feedbackId").isMongoId().withMessage("must be a valid feedback id"),
+  validate,
+  markFeedbackRead,
+);
+
+router.get("/my-requests", isAuthenticated, isAuthorized("Student"), getMyRequests);
+router.put(
+  "/requests/:id/cancel",
+  isAuthenticated,
+  isAuthorized("Student"),
+  param("id").isMongoId().withMessage("must be a valid request id"),
+  validate,
+  cancelSupervisorRequest,
+);
+
+router.get("/my-files", isAuthenticated, isAuthorized("Student"), getMyFiles);
+router.delete(
+  "/files/:projectId/:fileId",
+  isAuthenticated,
+  isAuthorized("Student"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  param("fileId").isMongoId().withMessage("must be a valid file id"),
+  validate,
+  deleteMyFile,
+);
+
+router.post(
+  "/feedback/:feedbackId/reply",
+  isAuthenticated,
+  isAuthorized("Student"),
+  param("feedbackId").isMongoId().withMessage("must be a valid feedback id"),
+  body("message").trim().isLength({ min: 1, max: 1000 }).withMessage("must be 1-1000 characters"),
+  validate,
+  replyToFeedback,
 );
 
 export default router;

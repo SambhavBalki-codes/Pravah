@@ -1,5 +1,52 @@
 import mongoose from "mongoose";
 
+
+const replySchema = new mongoose.Schema(
+  {
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    role: { type: String, enum: ["Student", "Teacher"], required: true },
+    message: {
+      type: String,
+      trim: true,
+      required: [true, "Reply message is required"],
+      maxLength: [1000, "Reply cannot exceed 1000 characters"],
+    },
+  },
+  { timestamps: true },
+);
+
+const feedbackSchema = new mongoose.Schema(
+{
+    supervisorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: [true, "Supervisor ID is required"],
+    },
+    type: {
+      type: String,
+      enum: ["general", "positive", "negative"],
+      default: "general",
+    },
+    title: {
+      type: String,
+      trim: true,
+      required: [true, "Feedback title is required"],
+    },
+    message: {
+      type: String,
+      required: [true, "Feedback message is required"],
+      maxLength: [1000, "Feedback message cannot exceed 1000 characters"],
+    },
+    requiresRevision: { type: Boolean, default: false },
+    fileId: { type: mongoose.Schema.Types.ObjectId, default: null },
+    isRead: { type: Boolean, default: false },
+    readAt: { type: Date, default: null },
+    replies: { type: [replySchema], default: [] },
+  },
+  { timestamps: true },
+);
+
+
 const projectSchema = new mongoose.Schema(
   {
     student: {
@@ -59,31 +106,17 @@ const projectSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
+        fileSize: { type: Number, default: 0 },
+        reviewStatus: {
+          type: String,
+          enum: ["pending", "reviewed", "revision_requested"],
+          default: "pending",
+        },
+        reviewedAt: { type: Date, default: null },
+        version: { type: Number, default: 1 },
       },
     ],
-    feedbacks: [
-      {
-        supervisorId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: [true, "Supervisor ID is required"],
-        },
-        type: {
-          type: String,
-          enum: ["general", "positive", "negative"],
-          default: "general",
-        },
-        title: {
-          type: String,
-          required: [true, "Feedback title is required"],
-        },
-        message: {
-          type: String,
-          required: [true, "Feedback message is required"],
-          maxLength: [1000, "Feedback message cannot exceed 1000 characters"],
-        },
-      },
-    ],
+    feedbacks: [feedbackSchema],
     deadline: {
       type: Date,
       default: null,
