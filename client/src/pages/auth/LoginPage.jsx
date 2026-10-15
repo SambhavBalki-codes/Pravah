@@ -1,71 +1,45 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-
-import backgroundImage from "../../assets/NEW_BACKGROUND.jpg";
-import logoImage from "../../assets/Logo.avif";
+import { Loader2, LogIn, Lock, Mail } from "lucide-react";
 import { login } from "../../store/slices/authSlice";
+import AuthLayout from "../../components/auth/AuthLayout";
+import AuthField from "../../components/auth/AuthField";
+
+const ROLES = ["Student", "Teacher", "Admin"];
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { isLoggingIn, authUser } = useSelector((state) => state.auth);
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    role: "Student",
-  });
-
+  const [formData, setFormData] = useState({ email: "", password: "", role: "Student" });
   const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const next = {};
+    if (!formData.email.trim()) next.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) next.email = "Enter a valid email address";
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
+    if (!formData.password) next.password = "Password is required";
+    else if (formData.password.length < 8) next.password = "Password must be at least 8 characters";
 
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
+    if (!validateForm()) return;
     dispatch(
       login({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
         role: formData.role,
       }),
@@ -73,166 +47,89 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    if (authUser) {
-      const role = authUser.role?.toLowerCase();
-
-      if (role === "student") {
-        navigate("/student");
-      } else if (role === "teacher") {
-        navigate("/teacher");
-      } else if (role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/login");
-      }
-    }
+    if (!authUser) return;
+    const role = authUser.role?.toLowerCase();
+    if (role === "student") navigate("/student");
+    else if (role === "teacher") navigate("/teacher");
+    else if (role === "admin") navigate("/admin");
+    else navigate("/login");
   }, [authUser, navigate]);
 
   return (
-    <div
-      className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 sm:px-6 lg:px-8"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-      }}
-    >
-      <div className="absolute inset-0 bg-slate-950/25" />
-
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/90 backdrop-blur-sm shadow-2xl py-6 px-6 sm:py-8 sm:px-10">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border border-blue-100 bg-white shadow-sm sm:h-32 sm:w-32">
-            <img
-              src={logoImage}
-              alt="Pravah Logo"
-              className="h-full w-full object-cover"
-            />
+    <AuthLayout title="Welcome back" subtitle="Sign in to your Pravah account to continue.">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <fieldset>
+          <legend className="mb-1.5 text-sm font-semibold text-slate-700">Sign in as</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {ROLES.map((role) => (
+              <label key={role} className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="role"
+                  value={role}
+                  checked={formData.role === role}
+                  onChange={handleChange}
+                  className="peer sr-only"
+                />
+                <span className="block rounded-xl border border-slate-300 py-2.5 text-center text-sm font-semibold text-slate-600 transition hover:bg-slate-50 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-300">
+                  {role}
+                </span>
+              </label>
+            ))}
           </div>
+        </fieldset>
 
-          <h1 className="text-3xl font-bold text-blue-700">Pravah</h1>
+        <AuthField
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          icon={<Mail size={18} />}
+          placeholder="you@example.com"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
 
-          <p className="mt-2 text-sm font-medium tracking-[0.12em] text-slate-500 uppercase">
-            create lead grow
-          </p>
-        </div>
+        <AuthField
+          label="Password"
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          icon={<Lock size={18} />}
+          placeholder="Enter your password"
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
-            >
-              Email
-            </label>
-
-            <div className="relative">
-              <i className="bx bx-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
-
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter your email"
-                className={`w-full text-base pl-10 pr-4 py-2.5 rounded-lg border outline-none transition ${
-                  errors.email
-                    ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                }`}
-              />
-            </div>
-
-            {errors.email && (
-              <p className="text-red-500 text-sm mt-1.5">{errors.email}</p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
-            >
-              Password
-            </label>
-
-            <div className="relative">
-              <i className="bx bx-lock-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
-
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                className={`w-full text-base pl-10 pr-4 py-2.5 rounded-lg border outline-none transition ${
-                  errors.password
-                    ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                }`}
-              />
-            </div>
-
-            {errors.password && (
-              <p className="text-red-500 text-sm mt-1.5">{errors.password}</p>
-            )}
-          </div>
-
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-semibold text-gray-700 mb-1.5"
-            >
-              Login as
-            </label>
-
-            <div className="relative">
-              <i className="bx bx-id-card absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
-
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full text-base pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition appearance-none"
-              >
-                <option value="Student">Student</option>
-                <option value="Teacher">Teacher</option>
-                <option value="Admin">Admin</option>
-              </select>
-
-              <i className="bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none"></i>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoggingIn}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-base font-semibold py-2.5 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoggingIn ? (
-              <>
-                <i className="bx bx-loader-alt animate-spin text-lg"></i>
-                Signing in...
-              </>
-            ) : (
-              <>
-                <i className="bx bx-log-in text-lg"></i>
-                Sign in
-              </>
-            )}
-          </button>
-        </form>
-
-        <div className="mt-4 text-center">
+        <div className="flex justify-end">
           <Link
             to="/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-700 hover:underline"
+            className="rounded text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
           >
-            Forgot your password?
+            Forgot password?
           </Link>
         </div>
-      </div>
-    </div>
+
+        <button
+          type="submit"
+          disabled={isLoggingIn}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isLoggingIn ? (
+            <>
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Signing in...
+            </>
+          ) : (
+            <>
+              <LogIn size={18} aria-hidden="true" /> Sign in
+            </>
+          )}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

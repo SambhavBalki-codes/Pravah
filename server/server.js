@@ -1,4 +1,5 @@
 import { connectDB } from "./config/db.js";
+import { startDeadlineReminders } from "./jobs/deadlineReminders.js";
 import app from "./app.js";
 
 connectDB();
@@ -7,6 +8,8 @@ const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+startDeadlineReminders();
 
 process.on("unhandledRejection", (err) => {
   console.log(`Error: ${err.message}`);

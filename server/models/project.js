@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
-
+import ErrorHandler from "../middlewares/error.js";
+import {
+  ACTIVE_PROJECT_STATUSES,
+  isValidProjectStatusTransition,
+  projectStatuses,
+} from "../utils/projectStatus.js";
 
 const replySchema = new mongoose.Schema(
   {
@@ -16,7 +21,7 @@ const replySchema = new mongoose.Schema(
 );
 
 const feedbackSchema = new mongoose.Schema(
-{
+  {
     supervisorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -46,6 +51,31 @@ const feedbackSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+const fileSchema = new mongoose.Schema({
+  fileType: {
+    type: String,
+    required: [true, "File type is required"],
+  },
+  fileUrl: {
+    type: String,
+    required: [true, "File URL is required"],
+  },
+  originalName: {
+    type: String,
+    required: [true, "Original file name is required"],
+  },
+  storedName: { type: String, default: "" },
+  fileSize: { type: Number, default: 0 },
+  version: { type: Number, default: 1 },
+  uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  uploadedAt: { type: Date, default: Date.now },
+  reviewStatus: {
+    type: String,
+    enum: ["pending", "reviewed", "revision_requested"],
+    default: "pending",
+  },
+  reviewedAt: { type: Date, default: null },
+});
 
 const projectSchema = new mongoose.Schema(
   {
@@ -70,17 +100,11 @@ const projectSchema = new mongoose.Schema(
       required: [true, "Description is required"],
       maxLength: [2000, "Description cannot exceed 2000 characters"],
     },
+    department: { type: String, trim: true, default: null },
     status: {
       type: String,
       default: "pending",
-      enum: [
-        "pending",
-        "approved",
-        "in_progress",
-        "revision_required",
-        "rejected",
-        "completed",
-      ],
+      enum: projectStatuses,
     },
     rejectionReason: {
       type: String,
@@ -88,35 +112,18 @@ const projectSchema = new mongoose.Schema(
       maxLength: [1000, "Rejection reason cannot exceed 1000 characters"],
       default: null,
     },
-    files: [
-      {
-        fileType: {
-          type: String,
-          required: [true, "File type is required"],
-        },
-        fileUrl: {
-          type: String,
-          required: [true, "File URL is required"],
-        },
-        originalName: {
-          type: String,
-          required: [true, "Original file name is required"],
-        },
-        uploadedAt: {
-          type: Date,
-          default: Date.now,
-        },
-        fileSize: { type: Number, default: 0 },
-        reviewStatus: {
-          type: String,
-          enum: ["pending", "reviewed", "revision_requested"],
-          default: "pending",
-        },
-        reviewedAt: { type: Date, default: null },
-        version: { type: Number, default: 1 },
-      },
-    ],
-    feedbacks: [feedbackSchema],
+    revisionReason: {
+      type: String,
+      trim: true,
+      maxLength: [1000, "Revision reason cannot exceed 1000 characters"],
+      default: null,
+    },
+    submittedAt: { type: Date, default: null },
+    approvedAt: { type: Date, default: null },
+    completedAt: { type: Date, default: null },
+    lastActivityAt: { type: Date, default: null },
+    files: { type: [fileSchema], default: [] },
+    feedbacks: { type: [feedbackSchema], default: [] },
     deadline: {
       type: Date,
       default: null,
@@ -124,6 +131,39 @@ const projectSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+// Remember the status the document was loaded with, so a save can be checked against it
+projectSchema.post("init", function () {
+  this.$locals.previousStatus = this.status;
+});
+
+projectSchema.pre("save", function () {
+  const now = new Date();
+
+  if (this.isNew) {
+    this.submittedAt = this.submittedAt || now;
+  } else if (this.isModified("status")) {
+    const previous = this.$locals.previousStatus;
+    if (previous && !isValidProjectStatusTransition(previous, this.status)) {
+      throw new ErrorHandler(
+        `Invalid project status transition from "${previous}" to "${this.status}"`,
+        400,
+      );
+    }
+  }
+
+  if (this.isModified("status")) {
+    if (this.status === "approved" && !this.approvedAt) this.approvedAt = now;
+    if (this.status === "completed") this.completedAt = now;
+    if (this.status === "in_progress") this.revisionReason = null;
+  }
+
+  this.lastActivityAt = now;
+});
+
+projectSchema.post("save", function () {
+  this.$locals.previousStatus = this.status;
+});
 
 projectSchema.index({ student: 1 });
 projectSchema.index({ student: 1, createdAt: -1 });
@@ -136,15 +176,7 @@ projectSchema.index(
     name: "unique_active_project_per_student",
     unique: true,
     partialFilterExpression: {
-      status: {
-        $in: [
-          "pending",
-          "approved",
-          "in_progress",
-          "revision_required",
-          "completed",
-        ],
-      },
+      status: { $in: ACTIVE_PROJECT_STATUSES },
     },
   },
 );

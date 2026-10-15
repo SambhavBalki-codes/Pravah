@@ -8,7 +8,11 @@ import * as notificationService from "../services/notificationService.js";
 import { Deadline } from "../models/deadline.js";
 import * as fileServices from "../services/fileServices.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
-import { isValidProjectStatusTransition } from "../utils/projectStatus.js";
+import {
+  ACTIVE_PROJECT_STATUSES,
+  canTeacherChangeStatus,
+  isValidProjectStatusTransition,
+} from "../utils/projectStatus.js";
 import {
   serializeFile,
   serializeFeedback,
@@ -72,7 +76,7 @@ export const acceptSupervisorRequest = asyncHandler(async (req, res, next) => {
 
   const project = await Project.findOne({
     student: request.student,
-    status: { $in: ["pending", "approved", "in_progress", "revision_required", "completed"] },
+    status: { $in: ACTIVE_PROJECT_STATUSES },
   }).sort({ createdAt: -1 }).lean();
   if (!project) return next(new ErrorHandler("Student has no active project", 404));
 
@@ -298,6 +302,11 @@ export const getAssignedStudent = asyncHandler(async (req, res, next) => {
             description: project.description,
             status: project.status,
             createdAt: project.createdAt,
+            submittedAt: project.submittedAt || project.createdAt,
+            approvedAt: project.approvedAt || null,
+            completedAt: project.completedAt || null,
+            lastActivityAt: project.lastActivityAt || null,
+            revisionReason: project.revisionReason || null,
             files: (project.files || [])
               .map(serializeFile)
               .sort((a, b) => new Date(b.uploadedAt || 0) - new Date(a.uploadedAt || 0)),
@@ -368,6 +377,7 @@ export const reviewTeacherFile = asyncHandler(async (req, res, next) => {
     });
     if (isValidProjectStatusTransition(project.status, "revision_required")) {
       project.status = "revision_required";
+      project.revisionReason = message.slice(0, 1000);
     }
   }
 
@@ -417,8 +427,9 @@ export const addProjectFeedback = asyncHandler(async (req, res, next) => {
       file.reviewStatus = "revision_requested";
       file.reviewedAt = new Date();
     }
-    if (isValidProjectStatusTransition(project.status, "revision_required")) {
+        if (isValidProjectStatusTransition(project.status, "revision_required")) {
       project.status = "revision_required";
+      project.revisionReason = message.trim().slice(0, 1000);
     }
   }
 
@@ -502,23 +513,36 @@ export const downloadTeacherProjectFile = asyncHandler(async (req, res, next) =>
 export const updateTeacherProjectStatus = asyncHandler(async (req, res, next) => {
   const project = await Project.findOne(teacherProjectQuery(req.user._id, req.params.id));
   if (!project) return next(new ErrorHandler("Project not found", 404));
-  if (req.body.status === "rejected" && !req.body.rejectionReason?.trim()) {
-    return next(new ErrorHandler("A rejection reason is required", 400));
-  }
-  if (!isValidProjectStatusTransition(project.status, req.body.status)) {
-    return next(new ErrorHandler(`Invalid project status transition from "${project.status}" to "${req.body.status}"`, 400));
+
+  const nextStatus = req.body.status;
+  if (!canTeacherChangeStatus(project.status, nextStatus)) {
+    return next(
+      new ErrorHandler(
+        `You cannot change a project from "${project.status}" to "${nextStatus}". Approving and rejecting proposals is done by an admin.`,
+        400,
+      ),
+    );
   }
 
-  project.status = req.body.status;
-  if (project.status !== "rejected") project.rejectionReason = null;
-  if (project.status === "rejected") project.rejectionReason = req.body.rejectionReason?.trim() || null;
+  const revisionReason = req.body.revisionReason?.trim();
+  if (nextStatus === "revision_required" && !revisionReason) {
+    return next(new ErrorHandler("Please describe what needs to be revised", 400));
+  }
+
+  project.status = nextStatus;
+  if (nextStatus === "revision_required") project.revisionReason = revisionReason.slice(0, 1000);
   await project.save();
-  await notificationService.notifyUser(
-    project.student,
-    `Your project "${project.title}" status was updated to ${project.status}.`,
-    "project",
-    "/student",
-    project.status === "rejected" ? "high" : "medium",
+
+  await notificationService.safeNotify(() =>
+    notificationService.notifyUser(
+      project.student,
+      nextStatus === "completed"
+        ? `Your project "${project.title}" was marked as completed.`
+        : `Your project "${project.title}" status was updated to ${nextStatus.replaceAll("_", " ")}.`,
+      "project",
+      "/student",
+      nextStatus === "completed" ? "high" : "medium",
+    ),
   );
 
   res.status(200).json({

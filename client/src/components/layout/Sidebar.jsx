@@ -1,7 +1,41 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../store/slices/authSlice";
+
+const SignOutIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+    />
+  </svg>
+);
 
 const Sidebar = ({ open, setOpen, userRole }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { authUser } = useSelector((state) => state.auth);
+
+  const initials =
+    authUser?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "U";
+
+  const handleLogout = () => {
+    dispatch(logout()).then(() => navigate("/login"));
+  };
+
   const getNavigationItems = () => {
     switch (userRole) {
       case "Student":
@@ -39,6 +73,11 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             icon: "users",
           },
           { name: "Files", path: "/teacher/files", icon: "folder" },
+          {
+            name: "Notifications",
+            path: "/teacher/notifications",
+            icon: "bell",
+          },
         ];
       case "Admin":
         return [
@@ -56,6 +95,11 @@ const Sidebar = ({ open, setOpen, userRole }) => {
           },
           { name: "Deadlines", path: "/admin/deadlines", icon: "calendar" },
           { name: "Projects", path: "/admin/projects", icon: "folder" },
+          {
+            name: "Notifications",
+            path: "/admin/notifications",
+            icon: "bell",
+          },
         ];
       default:
         return [];
@@ -327,16 +371,43 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-200">
+          <div className="p-4 border-t border-slate-200 space-y-3">
             <div
-              className={`transition-opacity duration-300 ${
-                open ? "opacity-100" : "opacity-0 lg:opacity-0"
-              } ${open ? "block" : "hidden lg:hidden"}`}
+              className={`flex items-center ${
+                open ? "gap-3" : "flex-col gap-2"
+              }`}
             >
+              <div
+                title={authUser?.name}
+                className="w-9 h-9 shrink-0 bg-blue-500 rounded-full flex items-center justify-center text-sm font-medium text-white"
+              >
+                {initials}
+              </div>
+              {open && (
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-800">
+                    {authUser?.name}
+                  </p>
+                  <p className="text-xs text-slate-500 capitalize">
+                    {authUser?.role}
+                  </p>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign out"
+                aria-label="Sign out"
+                className="shrink-0 rounded-lg p-2 text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <SignOutIcon />
+              </button>
+            </div>
+            {open && (
               <p className="text-xs font-normal tracking-wide text-slate-500 text-center">
                 Pravah • Connect ideas
               </p>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -385,7 +456,29 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-200">
+          <div className="p-4 border-t border-slate-200 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 shrink-0 bg-blue-500 rounded-full flex items-center justify-center text-sm font-medium text-white">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-800">
+                  {authUser?.name}
+                </p>
+                <p className="text-xs text-slate-500 capitalize">
+                  {authUser?.role}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Sign out"
+                aria-label="Sign out"
+                className="shrink-0 rounded-lg p-2 text-slate-600 transition hover:bg-red-50 hover:text-red-600"
+              >
+                <SignOutIcon />
+              </button>
+            </div>
             <p className="text-xs font-normal tracking-wide text-slate-500 text-center">
               Pravah • Connect ideas
             </p>

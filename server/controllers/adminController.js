@@ -208,6 +208,9 @@ export const decideProject = asyncHandler(async (req, res, next) => {
   const project = await Project.findById(projectId);
 
   if (!project) return next(new ErrorHandler("Project not found", 404));
+  if (!["approved", "rejected"].includes(status)) {
+    return next(new ErrorHandler("This action can only approve or reject a proposal", 400));
+  }
   if (!isValidProjectStatusTransition(project.status, status)) {
     return next(
       new ErrorHandler(
@@ -275,6 +278,18 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
   project.status = status;
   if (status !== "rejected") project.rejectionReason = null;
   await project.save();
+
+    await notificationService.safeNotify(() =>
+    notificationService.notifyUser(
+      project.student,
+      status === "completed"
+        ? `Your project "${project.title}" was marked as completed.`
+        : `Your project "${project.title}" status was updated to ${status.replaceAll("_", " ")}.`,
+      "project",
+      "/student",
+      ["completed", "rejected"].includes(status) ? "high" : "medium",
+    ),
+  );
 
   res.status(200).json({
     success: true,
@@ -373,11 +388,13 @@ export const updateDeadline = asyncHandler(async (req, res, next) => {
 
     const updatedDeadline = await Deadline.findByIdAndUpdate(
       deadlineId,
-      {
+            {
         name: name.trim(),
         dueDate: new Date(dueDate),
         project: project || null,
         student: student || null,
+        reminderSentAt: null,
+        overdueNotifiedAt: null,
       },
       { new: true, runValidators: true },
     );

@@ -14,6 +14,7 @@ const make = (map, labels = {}) =>
 
 export const StatusBadge = make({
   pending: "bg-amber-50 text-amber-700 ring-amber-200",
+    under_review: "bg-sky-50 text-sky-700 ring-sky-200",
   approved: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   in_progress: "bg-blue-50 text-blue-700 ring-blue-200",
   revision_required: "bg-violet-50 text-violet-700 ring-violet-200",

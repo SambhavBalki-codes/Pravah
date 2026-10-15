@@ -1,6 +1,7 @@
 import ErrorHandler from "../middlewares/error.js";
 import { Project } from "../models/project.js";
 import User from "../models/user.js";
+import { ACTIVE_PROJECT_STATUSES } from "../utils/projectStatus.js";
 
 export const getProjectByStudentId = async (studentId) => {
   return await Project.findOne({ student: studentId }).sort({ createdAt: -1 });
@@ -9,20 +10,17 @@ export const getProjectByStudentId = async (studentId) => {
 export const getActiveProjectByStudentId = async (studentId) => {
   return await Project.findOne({
     student: studentId,
-    status: {
-      $in: [
-        "pending",
-        "approved",
-        "in_progress",
-        "revision_required",
-        "completed",
-      ],
-    },
+    status: { $in: ACTIVE_PROJECT_STATUSES },
   }).sort({ createdAt: -1 });
 };
 
 export const createProject = async (projectData) => {
-  const newProject = new Project(projectData);
+  // Keep the student's department on the project, so it can be filtered later
+  const student = await User.findById(projectData.student).select("department").lean();
+  const newProject = new Project({
+    ...projectData,
+    department: projectData.department || student?.department || null,
+  });
   try {
     return await newProject.save();
   } catch (error) {
@@ -73,7 +71,7 @@ export const getProjectBySupervisorIdAndProjectId = async (
     .populate("supervisor", "name email");
 };
 
-export const addFilesToProject = async (projectId, files) => {
+export const addFilesToProject = async (projectId, files, uploadedBy = null) => {
   const project = await Project.findById(projectId);
 
   if (!project) {
@@ -91,9 +89,11 @@ export const addFilesToProject = async (projectId, files) => {
       fileType: file.mimetype,
       fileUrl: file.path,
       originalName: file.originalname,
+      storedName: file.filename || "",
       fileSize: file.size,
       reviewStatus: "pending",
       version,
+      uploadedBy,
     });
   });
 

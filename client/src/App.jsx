@@ -15,14 +15,16 @@ import NotificationsPage from "./pages/student/NotificationsPage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import PendingRequests from "./pages/teacher/PendingRequests";
 import AssignedStudents from "./pages/teacher/AssignedStudents";
+import StudentDetail from "./pages/teacher/StudentDetail";
 import TeacherFiles from "./pages/teacher/TeacherFiles";
+import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageStudents from "./pages/admin/ManageStudents";
 import ManageTeachers from "./pages/admin/ManageTeachers";
-import StudentDetail from "./pages/teacher/StudentDetail";
 import AssignSupervisor from "./pages/admin/AssignSupervisor";
 import DeadlinesPage from "./pages/admin/DeadlinesPage";
 import ProjectsPage from "./pages/admin/ProjectsPage";
+import AdminNotifications from "./pages/admin/AdminNotifications";
 import { Slide, ToastContainer } from "react-toastify";
 import {
   getAllUsers,
@@ -120,8 +122,9 @@ const App = () => {
           <Route index element={<TeacherDashboard />} />
           <Route path="pending-requests" element={<PendingRequests />} />
           <Route path="assigned-students" element={<AssignedStudents />} />
-          <Route path="files" element={<TeacherFiles />} />
           <Route path="assigned-students/:id" element={<StudentDetail />} />
+          <Route path="files" element={<TeacherFiles />} />
+          <Route path="notifications" element={<TeacherNotifications />} />
         </Route>
 
         <Route
@@ -138,10 +141,21 @@ const App = () => {
           <Route path="assign-supervisor" element={<AssignSupervisor />} />
           <Route path="deadlines" element={<DeadlinesPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="notifications" element={<AdminNotifications />} />
         </Route>
       </Routes>
 
-      <ToastContainer theme="dark" transition={Slide} />
+            <ToastContainer
+        theme="dark"
+        transition={Slide}
+        autoClose={6000}
+        limit={3}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        pauseOnFocusLoss
+        draggable
+      />
     </BrowserRouter>
   );
 };

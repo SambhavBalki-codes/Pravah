@@ -1,216 +1,118 @@
 import { useState } from "react";
-
 import { Link } from "react-router-dom";
-
 import { useDispatch, useSelector } from "react-redux";
-
-import backgroundImage from "../../assets/NEW_BACKGROUND.jpg";
+import { ArrowLeft, Loader2, Mail, MailCheck, Send } from "lucide-react";
 import { forgotPassword } from "../../store/slices/authSlice";
+import AuthLayout from "../../components/auth/AuthLayout";
+import AuthField from "../../components/auth/AuthField";
+
+const BackToLogin = () => (
+  <Link
+    to="/login"
+    className="inline-flex items-center gap-2 rounded font-semibold text-slate-600 hover:text-blue-600"
+  >
+    <ArrowLeft size={16} aria-hidden="true" /> Back to sign in
+  </Link>
+);
 
 const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState("");
+  const dispatch = useDispatch();
+  const { isRequestingForToken } = useSelector((state) => state.auth);
 
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const [error, setError] = useState("");
-  const { isRequestingForToken } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!email) {
-      setError("Email is required");
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Email is invalid");
-      return;
-    }
-
+  const send = async () => {
     setError("");
-
     try {
-      await dispatch(forgotPassword({ email })).unwrap();
+      await dispatch(forgotPassword({ email: email.trim() })).unwrap();
       setIsSubmitted(true);
-    } catch (error) {
-      setError(error || "Something went wrong. Please try again.");
+    } catch (err) {
+      setError(typeof err === "string" ? err : "Something went wrong. Please try again.");
     }
   };
 
-  const handleResendEmail = async () => {
-    if (!email) {
-      setError("Email is required");
-      return;
-    }
-
-    try {
-      setError("");
-
-      await dispatch(forgotPassword({ email })).unwrap();
-
-      setIsSubmitted(true);
-    } catch (error) {
-      setError(error || "Something went wrong. Please try again.");
-    }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!email.trim()) return setError("Email is required");
+    if (!/\S+@\S+\.\S+/.test(email)) return setError("Enter a valid email address");
+    send();
   };
 
   if (isSubmitted) {
     return (
-      <div
-        className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 sm:px-6 lg:px-8"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-950/25" />
-
-        <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/95 p-8 text-center shadow-2xl backdrop-blur-sm sm:p-10">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 ring-8 ring-emerald-50">
-            <i className="bx bx-envelope-open text-3xl"></i>
+      <AuthLayout title="Check your inbox" footer={<BackToLogin />}>
+        <div className="text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-8 ring-emerald-50/60">
+            <MailCheck size={26} aria-hidden="true" />
           </div>
-
-          <p className="mt-7 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
-            Email sent
-          </p>
-
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">
-            Check your inbox
-          </h2>
-
-          <p className="mt-3 text-sm leading-6 text-slate-600">
-            We sent a password reset link to
-          </p>
-
-          <p className="mt-3 break-all rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+          <p className="mt-5 text-sm leading-6 text-slate-500">We sent a password reset link to</p>
+          <p className="mt-2 break-all rounded-xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700">
             {email}
           </p>
-
-          <p className="mt-4 text-sm leading-6 text-slate-500">
-            If an account exists for this address, the email should arrive
-            shortly. Please check your spam folder if you do not see it.
+          <p className="mt-4 text-xs leading-5 text-slate-400">
+            If an account exists for this address, the email will arrive shortly. Check your spam
+            folder if you do not see it.
           </p>
-
-          <div className="mt-7 flex flex-col gap-3">
-            <Link
-              to="/login"
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
-            >
-              <i className="bx bx-arrow-back mr-2 text-lg"></i>
-              Return to login
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleResendEmail}
-              disabled={isRequestingForToken}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <i
-                className={`bx ${isRequestingForToken ? "bx-loader-alt animate-spin" : "bx-refresh"} mr-2 text-lg`}
-              ></i>
-              {isRequestingForToken ? "Sending..." : "Resend reset link"}
-            </button>
-          </div>
+          {error && (
+            <p role="alert" className="mt-4 text-xs font-medium text-rose-600">
+              {error}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={send}
+            disabled={isRequestingForToken}
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            {isRequestingForToken && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+            {isRequestingForToken ? "Sending..." : "Resend link"}
+          </button>
         </div>
-      </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <>
-      <div
-        className="relative min-h-screen w-full bg-cover bg-center bg-no-repeat flex items-center justify-center px-4 sm:px-6 lg:px-8"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-950/25" />
-
-        <div className="relative z-10 w-full max-w-md rounded-2xl bg-white/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
-          <div className="mb-8 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 ring-8 ring-blue-50">
-              <i className="bx bx-key text-3xl"></i>
-            </div>
-
-            <p className="mt-7 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-              Account recovery
-            </p>
-
-            <h1 className="mt-2 text-3xl font-bold text-slate-900">
-              Forgot password?
-            </h1>
-
-            <p className="mt-3 text-sm leading-6 text-slate-500">
-              Enter your email address and we will send you a secure link to
-              reset your password.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-semibold text-slate-700"
-              >
-                Email
-              </label>
-
-              <div className="relative">
-                <i className="bx bx-envelope absolute left-3 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
-
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) setError("");
-                  }}
-                  placeholder="you@example.com"
-                  className={`w-full rounded-lg border py-3 pl-10 pr-4 text-base outline-none transition placeholder:text-slate-400 ${
-                    error
-                      ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                      : "border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  }`}
-                  disabled={isRequestingForToken}
-                />
-              </div>
-
-              {error && <p className="text-red-500 text-sm mt-1.5">{error}</p>}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isRequestingForToken}
-              className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 text-base font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isRequestingForToken ? (
-                <>
-                  <i className="bx bx-loader-alt animate-spin text-lg"></i>
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <i className="bx bx-log-in text-lg"></i>
-                  Send Reset Link
-                </>
-              )}
-            </button>
-          </form>
-
-          <Link
-            to="/login"
-            className="mt-6 inline-flex w-full items-center justify-center text-sm font-semibold text-slate-500 transition hover:text-blue-600"
-          >
-            <i className="bx bx-arrow-back mr-2 text-lg"></i>
-            Return to login
-          </Link>
-        </div>
-      </div>
-    </>
+    <AuthLayout
+      title="Forgot your password?"
+      subtitle="Enter your email and we will send you a link to reset it."
+      footer={<BackToLogin />}
+    >
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <AuthField
+          label="Email"
+          type="email"
+          name="email"
+          autoComplete="email"
+          icon={<Mail size={18} />}
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (error) setError("");
+          }}
+          error={error}
+          disabled={isRequestingForToken}
+        />
+        <button
+          type="submit"
+          disabled={isRequestingForToken}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isRequestingForToken ? (
+            <>
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" /> Sending...
+            </>
+          ) : (
+            <>
+              <Send size={18} aria-hidden="true" /> Send reset link
+            </>
+          )}
+        </button>
+      </form>
+    </AuthLayout>
   );
 };
 

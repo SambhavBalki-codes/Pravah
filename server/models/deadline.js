@@ -16,6 +16,8 @@ const deadlineSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    reminderSentAt: { type: Date, default: null },
+    overdueNotifiedAt: { type: Date, default: null },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

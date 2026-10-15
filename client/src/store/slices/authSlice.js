@@ -2,19 +2,25 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { axiosInstance } from "../../lib/axios";
 import appToast from "../../lib/toast";
 
-export const login = createAsyncThunk("login", async (data, thunkAPI) => {
-  try {
-    const response = await axiosInstance.post("/auth/login", data);
-    appToast.success(response.data.message);
-    return response.data.data;
-  } catch (error) {
-    const message =
-      error.response?.data?.message ||
-      "Unable to connect to the server. Please try again.";
-    appToast.error(message);
-    return thunkAPI.rejectWithValue(message);
-  }
-});
+export const login = createAsyncThunk(
+  "login",
+  async (data, thunkAPI) => {
+    try {
+      const response = await axiosInstance.post("/auth/login", data);
+      appToast.success(response.data.message);
+      return response.data.data;
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        "Unable to connect to the server. Please try again.";
+      appToast.error(message);
+      return thunkAPI.rejectWithValue(message);
+    }
+  },
+  {
+    condition: (_, { getState }) => !getState().auth.isLoggingIn,
+  },
+);
 
 export const forgotPassword = createAsyncThunk(
   "forgotPassword",

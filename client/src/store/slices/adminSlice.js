@@ -108,7 +108,7 @@ export const getAllUsers = createAsyncThunk(
   "admin/getAllUsers",
   async (_, thunkAPI) => {
     try {
-      const res = await axiosInstance.get("/admin/users");
+      const res = await axiosInstance.get("/admin/users", { params: { limit: 100 } });
       return res.data.data;
     } catch (error) {
       const message =

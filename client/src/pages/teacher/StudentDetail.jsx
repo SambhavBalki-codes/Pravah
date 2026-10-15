@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AlertTriangle, ArrowLeft, Download, Eye, MessageSquare } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Download, Eye, MessageSquare , CheckCircle2, Loader2, Play} from "lucide-react";
 import { addTeacherFeedback, fetchAssignedStudentDetail } from "../../store/slices/teacherSlice";
 import { openTeacherFile } from "../../lib/fileActions";
 import { fileExt, formatDate, formatDateTime, formatSize } from "../../lib/format";
@@ -10,7 +10,7 @@ import { FeedbackTypeBadge, ProgressBadge, ReviewBadge, StatusBadge } from "../.
 import FeedbackModal from "../../components/modal/FeedbackModal";
 import { teacherReply } from "../../lib/feedbackReplies";
 import ReplyThread from "../../components/shared/ReplyThread";
-
+import { TEACHER_ACTIONS, changeProjectStatus } from "../../lib/projectStatus";
 const Card = ({ title, children }) => (
   <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
     <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{title}</h2>
@@ -23,6 +23,7 @@ const StudentDetail = () => {
   const dispatch = useDispatch();
   const { studentDetail: data, detailLoading, detailError } = useSelector((state) => state.teacher);
   const [showModal, setShowModal] = useState(false);
+    const [statusBusy, setStatusBusy] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAssignedStudentDetail(id));
@@ -67,6 +68,20 @@ const StudentDetail = () => {
     dispatch(fetchAssignedStudentDetail(id));
   };
 
+    const changeStatus = async (action) => {
+    if (!window.confirm(action.confirm || `${action.label}?`)) return;
+    setStatusBusy(true);
+    try {
+      await changeProjectStatus(project._id, action.status);
+      toast.success("Project status updated");
+      dispatch(fetchAssignedStudentDetail(id));
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Could not update the status");
+    } finally {
+      setStatusBusy(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-[1000px] space-y-5 pb-10">
       {back}
@@ -89,19 +104,49 @@ const StudentDetail = () => {
               <StatusBadge value={project.status} />
             </div>
             <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">{project.description}</p>
+              {project.status === "revision_required" && project.revisionReason && (
+              <div className="rounded-2xl bg-violet-50 p-4 text-sm text-violet-800">
+                <strong>Revision requested:</strong> {project.revisionReason}
+              </div>
+            )}
             <div className="flex flex-wrap gap-6 text-sm text-slate-500">
-              <span>Submitted: {formatDate(project.createdAt)}</span>
+                            <span>Submitted: {formatDate(project.submittedAt || project.createdAt)}</span>
+              {project.approvedAt && <span>Approved: {formatDate(project.approvedAt)}</span>}
+              {project.completedAt && <span>Completed: {formatDate(project.completedAt)}</span>}
+              {project.lastActivityAt && <span>Last activity: {formatDate(project.lastActivityAt)}</span>}
               <span>
                 Next deadline: {nextDeadline ? `${nextDeadline.name} (${formatDate(nextDeadline.dueDate)})` : "—"}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
-            >
-              <MessageSquare size={15} /> Give feedback
-            </button>
+                        <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700"
+              >
+                <MessageSquare size={15} /> Give feedback
+              </button>
+              {(TEACHER_ACTIONS[project.status] || []).map((action) => (
+                <button
+                  key={action.status}
+                  type="button"
+                  disabled={statusBusy}
+                  onClick={() => changeStatus(action)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition disabled:opacity-60 ${
+                    action.tone === "green" ? "bg-emerald-600 hover:bg-emerald-700" : "bg-indigo-600 hover:bg-indigo-700"
+                  }`}
+                >
+                  {statusBusy ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : action.tone === "green" ? (
+                    <CheckCircle2 size={15} />
+                  ) : (
+                    <Play size={15} />
+                  )}
+                  {action.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <p className="mt-4 text-sm text-slate-500">This student has no active project.</p>

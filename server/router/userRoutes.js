@@ -1,5 +1,6 @@
 import express from "express";
 import multer from "multer";
+import { requireExactEmailCase } from "../middlewares/emailCase.js";
 import {
   registerUser,
   login,
@@ -34,7 +35,7 @@ router.post(
   validate,
   registerUser,
 );
-router.post("/login", loginRateLimiter, email, body("password").notEmpty().withMessage("is required"), body("role").isIn(["Student", "Teacher", "Admin"]).withMessage("must be a valid role"), validate, login);
+router.post("/login", loginRateLimiter,requireExactEmailCase, email, body("password").notEmpty().withMessage("is required"), body("role").isIn(["Student", "Teacher", "Admin"]).withMessage("must be a valid role"), validate, login);
 router.get("/logout", isAuthenticated, logout);
 router.post("/password/forgot", forgotPasswordRateLimiter, email, validate, forgotPassword);
 router.put(

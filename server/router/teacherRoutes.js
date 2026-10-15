@@ -85,8 +85,8 @@ router.put(
   isAuthenticated,
   isAuthorized("Teacher"),
   projectId,
-  body("status").isIn(["pending", "approved", "in_progress", "revision_required", "rejected", "completed"]).withMessage("must be a valid project status"),
-  body("rejectionReason").optional().trim().isLength({ max: 1000 }).withMessage("must not exceed 1000 characters"),
+  body("status").isIn(["in_progress", "revision_required", "completed"]).withMessage("must be in_progress, revision_required or completed"),
+  body("revisionReason").optional().trim().isLength({ max: 1000 }).withMessage("must not exceed 1000 characters"),
   validate,
   updateTeacherProjectStatus,
 );

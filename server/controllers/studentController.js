@@ -10,6 +10,7 @@ import { Notification } from "../models/notifications.js";
 import { Deadline } from "../models/deadline.js";
 import * as fileServices from "../services/fileServices.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
+import { ACTIVE_PROJECT_STATUSES } from "../utils/projectStatus.js";
 import {
   serializeFeedback,
   serializeFile,
@@ -63,6 +64,14 @@ export const submitProposal = asyncHandler(async (req, res, next) => {
   const newProject = await projectService.createProject(projectData);
 
   await User.findByIdAndUpdate(studentID, { project: newProject._id });
+    await notificationService.safeNotify(() =>
+    notificationService.notifyAdmins(
+      `${req.user.name} submitted a project proposal: "${newProject.title}".`,
+      "request",
+      "/admin/projects",
+      "medium",
+    ),
+  );
 
   res.status(201).json({
     success: true,
@@ -104,7 +113,7 @@ export const uploadFiles = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("No files uploaded", 400));
   }
 
-  const updatedProject = await projectService.addFilesToProject(projectID, req.files);
+    const updatedProject = await projectService.addFilesToProject(projectID, req.files, studentId);
 
   if (project.supervisor?._id) {
     try {
@@ -188,7 +197,7 @@ export const requestSupervisor = asyncHandler(async (req, res, next) => {
 
   const activeProject = await Project.findOne({
     student: studentId,
-    status: { $in: ["pending", "approved", "in_progress", "revision_required", "completed"] },
+    status: { $in: ACTIVE_PROJECT_STATUSES },
   }).select("supervisor");
   if (!activeProject) {
     return next(new ErrorHandler("Submit a project proposal before requesting a supervisor", 400));

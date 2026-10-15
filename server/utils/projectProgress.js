@@ -55,7 +55,7 @@ export const getProgressState = (project) => {
   if (project.status === "completed") return "completed";
   if (project.status === "rejected") return "rejected";
   if (project.status === "revision_required") return "revision_required";
-  if (project.status === "pending") return "awaiting_approval";
+  if (["pending", "under_review"].includes(project.status)) return "awaiting_approval";
   const files = project.files || [];
   if (files.length === 0) return "awaiting_files";
   if (countPendingFiles(files) > 0) return "needs_review";

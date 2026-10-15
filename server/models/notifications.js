@@ -23,7 +23,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: [
+        enum: [
         "request",
         "approval",
         "rejection",
@@ -32,6 +32,7 @@ const notificationSchema = new mongoose.Schema(
         "general",
         "meeting",
         "system",
+        "project",
       ],
       default: "general",
     },

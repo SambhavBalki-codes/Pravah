@@ -1,5 +1,4 @@
 import express from "express";
-import multer from "multer";
 import {
   createStudent,
   updateStudent,
@@ -20,12 +19,12 @@ import {
   toggleDeadline,
   deleteDeadline,
 } from "../controllers/adminController.js";
-import { isAuthenticated ,isAuthorized} from "../middlewares/authMiddleware.js";
+import { isAuthenticated, isAuthorized } from "../middlewares/authMiddleware.js";
 import { body, param } from "express-validator";
 import { validate } from "../middlewares/validation.js";
+import { projectStatuses } from "../utils/projectStatus.js";
 
 const router = express.Router();
-
 
 const userFields = [
   body("name").trim().isLength({ min: 2, max: 50 }).withMessage("must be 2-50 characters"),
@@ -44,10 +43,9 @@ router.get(
 
 router.post("/create-student", isAuthenticated, isAuthorized("Admin"), ...userFields, validate, createStudent);
 
-router.put("/update-student/:id", isAuthenticated,isAuthorized("Admin"), userId, validate, updateStudent);
+router.put("/update-student/:id", isAuthenticated, isAuthorized("Admin"), userId, validate, updateStudent);
 
-router.delete("/delete-student/:id", isAuthenticated,isAuthorized("Admin"), userId, validate, deleteStudent);
-
+router.delete("/delete-student/:id", isAuthenticated, isAuthorized("Admin"), userId, validate, deleteStudent);
 
 router.post(
   "/create-teacher",
@@ -60,22 +58,13 @@ router.post(
   createTeacher,
 );
 
-router.put("/update-teacher/:id", isAuthenticated,isAuthorized("Admin"), userId, validate, updateTeacher);
+router.put("/update-teacher/:id", isAuthenticated, isAuthorized("Admin"), userId, validate, updateTeacher);
 
-router.delete("/delete-teacher/:id", isAuthenticated,isAuthorized("Admin"), userId, validate, deleteTeacher);
+router.delete("/delete-teacher/:id", isAuthenticated, isAuthorized("Admin"), userId, validate, deleteTeacher);
 
-router.get("/users" ,
-  isAuthenticated,
-  isAuthorized("Admin"),
-  getAllUsers
-);
+router.get("/users", isAuthenticated, isAuthorized("Admin"), getAllUsers);
 
-router.get(
-  "/projects",
-  isAuthenticated,
-  isAuthorized("Admin"),
-  getAllProjects,
-);
+router.get("/projects", isAuthenticated, isAuthorized("Admin"), getAllProjects);
 
 router.get(
   "/projects/:projectId",
@@ -153,19 +142,9 @@ router.put(
   isAuthenticated,
   isAuthorized("Admin"),
   param("projectId").isMongoId().withMessage("must be a valid project id"),
-  body("status")
-    .isIn([
-      "pending",
-      "approved",
-      "in_progress",
-      "revision_required",
-      "rejected",
-      "completed",
-    ])
-    .withMessage("must be a valid project status"),
+  body("status").isIn(projectStatuses).withMessage("must be a valid project status"),
   validate,
   updateProjectStatus,
 );
-
 
 export default router;

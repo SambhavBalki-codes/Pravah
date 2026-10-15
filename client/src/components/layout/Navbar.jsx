@@ -1,16 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../store/slices/authSlice";
 import logoImage from "../../assets/Logo.avif";
+import { fetchUnreadCount } from "../../store/slices/notificationSlice";
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { authUser } = useSelector((state) => state.auth);
+  const unreadCount = useSelector((state) => state.notification.unreadCount);
+  const hasBell = ["Student", "Teacher", "Admin"].includes(authUser?.role);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!hasBell) return undefined;
+    dispatch(fetchUnreadCount());
+    const timer = setInterval(() => dispatch(fetchUnreadCount()), 60000);
+    return () => clearInterval(timer);
+  }, [dispatch, hasBell]);
 
   const handleLogout = () => {
     dispatch(logout()).then(() => {
@@ -78,6 +88,33 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
           </div>
 
           <div className="flex items-center space-x-3">
+            {hasBell && (
+              <button
+                type="button"
+                onClick={() => navigate(`/${authUser.role.toLowerCase()}/notifications`)}
+                aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+                className="relative rounded-full p-2 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 18H5.5A1.5 1.5 0 0 1 4 16.5V15l2-2V10a6 6 0 1 1 12 0v3l2 2v1.5a1.5 1.5 0 0 1-1.5 1.5H15" />
+                  <path d="M10 20a2 2 0 0 0 4 0" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handleLogout}

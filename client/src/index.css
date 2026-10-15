@@ -71,6 +71,37 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+      :focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -4rem;
+    z-index: 100;
+    border-radius: 0.5rem;
+    background: #1d4ed8;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    transition: top 150ms ease;
+  }
+
+  .skip-link:focus {
+    top: 0.75rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float-slow,
+    .animate-float-slower,
+    .animate-pulse-soft {
+      animation: none !important;
+    }
+  }
   }
 }
 
@@ -248,3 +279,5 @@
     @apply animate-in slide-in-from-right duration-300;
   }
 }
+
+
