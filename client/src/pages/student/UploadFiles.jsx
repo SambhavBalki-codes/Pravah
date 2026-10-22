@@ -25,6 +25,7 @@ import {
   MAX_FILES_PER_UPLOAD,
   apiError,
   deleteMyFile,
+  downloadMyFile,
   fetchMyFiles,
   openMyFile,
   uploadMyFiles,
@@ -52,17 +53,23 @@ const ICONS = {
 };
 
 const FileTypeIcon = ({ name }) => {
-  const [Icon, color] = ICONS[name.split(".").pop().toLowerCase()] || [FileIcon, "text-slate-400"];
+  const [Icon, color] =
+    ICONS[name.split(".").pop().toLowerCase()] || [FileIcon, "text-slate-400"];
   return <Icon className={`h-8 w-8 shrink-0 ${color}`} />;
 };
 
 const extOf = (name) => `.${name.split(".").pop().toLowerCase()}`;
-const sameFile = (a, b) => a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+const sameFile = (a, b) =>
+  a.name === b.name &&
+  a.size === b.size &&
+  a.lastModified === b.lastModified;
 
 const Card = ({ title, action, children }) => (
   <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{title}</h2>
+      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+        {title}
+      </h2>
       {action}
     </div>
     {children}
@@ -88,7 +95,8 @@ const UploadFiles = () => {
     if (initial) setLoading(true);
     setError("");
     try {
-      setData(await fetchMyFiles());
+      const result = await fetchMyFiles();
+      setData(result);
     } catch (err) {
       setError(apiError(err, "Could not load your files"));
     } finally {
@@ -100,30 +108,38 @@ const UploadFiles = () => {
     load(true);
   }, [load]);
 
-  const project = data?.project || null;
-  const locked = Boolean(data?.locked);
+  const project = data?.data?.project || null;
+  const locked = Boolean(data?.data?.locked);
   const canUpload = Boolean(project) && !locked && !uploading;
+  const allFiles = data?.data?.files || [];
+  const summary = data?.data?.summary || {
+    total: 0,
+    pending: 0,
+    reviewed: 0,
+    revisionRequested: 0,
+  };
 
   const nextVersion = (name) => {
-    const versions = (data?.files || []).filter((f) => f.name === name).map((f) => f.version || 1);
+    const versions = allFiles
+      .filter((f) => f.name === name)
+      .map((f) => f.version || 1);
     return versions.length ? Math.max(...versions) + 1 : 1;
   };
 
   const hasVersions = useMemo(() => {
-    const names = (data?.files || []).map((f) => f.name);
+    const names = allFiles.map((f) => f.name);
     return new Set(names).size !== names.length;
-  }, [data]);
+  }, [allFiles]);
 
   const visibleFiles = useMemo(() => {
-    const files = data?.files || [];
-    if (showHistory) return files;
+    if (showHistory) return allFiles;
     const latest = new Map();
-    files.forEach((f) => {
+    allFiles.forEach((f) => {
       const current = latest.get(f.name);
       if (!current || f.version > current.version) latest.set(f.name, f);
     });
-    return files.filter((f) => latest.get(f.name)._id === f._id);
-  }, [data, showHistory]);
+    return allFiles.filter((f) => latest.get(f.name)._id === f._id);
+  }, [allFiles, showHistory]);
 
   const addFiles = (list) => {
     const problems = [];
@@ -136,11 +152,18 @@ const UploadFiles = () => {
       } else if (file.size === 0) {
         problems.push(`${file.name}: the file is empty`);
       } else if (file.size > MAX_FILE_SIZE) {
-        problems.push(`${file.name}: larger than 10 MB (${formatSize(file.size)})`);
-      } else if (selected.some((s) => sameFile(s, file)) || accepted.some((s) => sameFile(s, file))) {
+        problems.push(
+          `${file.name}: larger than 10 MB (${formatSize(file.size)})`,
+        );
+      } else if (
+        selected.some((s) => sameFile(s, file)) ||
+        accepted.some((s) => sameFile(s, file))
+      ) {
         problems.push(`${file.name}: already selected`);
       } else if (accepted.length >= room) {
-        problems.push(`${file.name}: you can upload at most ${MAX_FILES_PER_UPLOAD} files at a time`);
+        problems.push(
+          `${file.name}: you can upload at most ${MAX_FILES_PER_UPLOAD} files at a time`,
+        );
       } else {
         accepted.push(file);
       }
@@ -167,7 +190,9 @@ const UploadFiles = () => {
     setProgress(0);
     try {
       await uploadMyFiles(project._id, selected, setProgress);
-      toast.success(`${selected.length} file${selected.length === 1 ? "" : "s"} uploaded`);
+      toast.success(
+        `${selected.length} file${selected.length === 1 ? "" : "s"} uploaded`,
+      );
       setSelected([]);
       setPickErrors([]);
       await load();
@@ -179,16 +204,35 @@ const UploadFiles = () => {
     }
   };
 
-  const handleOpen = async (file, mode) => {
-    try {
-      await openMyFile({ projectId: project._id, fileId: file._id, name: file.name, mode });
-    } catch {
+ const handleOpen = async (file, mode) => {
+  try {
+    if (!file.fileUrl) {
       toast.error("Could not open the file. It may be missing on the server.");
+      return;
     }
-  };
+    if (mode === "download") {
+      const a = document.createElement("a");
+      a.href = file.fileUrl;
+      a.download = file.name;
+      a.target = "_blank";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      window.open(file.fileUrl, "_blank");
+    }
+  } catch {
+    toast.error("Could not open the file. It may be missing on the server.");
+  }
+};
 
   const handleDelete = async (file) => {
-    if (!window.confirm(`Delete "${file.name}" (v${file.version})? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete "${file.name}" (v${file.version})? This cannot be undone.`,
+      )
+    )
+      return;
     setDeletingId(file._id);
     try {
       await deleteMyFile(project._id, file._id);
@@ -201,7 +245,6 @@ const UploadFiles = () => {
     }
   };
 
-  const summary = data?.summary || { total: 0, pending: 0, reviewed: 0, revisionRequested: 0 };
   const cards = [
     ["Total files", summary.total],
     ["Awaiting review", summary.pending],
@@ -221,7 +264,9 @@ const UploadFiles = () => {
     return (
       <div className="flex items-center justify-between rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
         {error}
-        <button onClick={() => load(true)} className="font-semibold underline">Retry</button>
+        <button onClick={() => load(true)} className="font-semibold underline">
+          Retry
+        </button>
       </div>
     );
   }
@@ -230,10 +275,15 @@ const UploadFiles = () => {
     <div className="mx-auto max-w-[1280px] space-y-5 pb-10">
       <header className="flex flex-wrap items-end justify-between gap-5 rounded-3xl border border-slate-200 bg-gradient-to-r from-blue-50 via-white to-indigo-50 px-6 py-6 shadow-sm">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Submission</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-800">Project files</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+            Submission
+          </p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-800">
+            Project files
+          </h1>
           <p className="mt-2 text-sm text-slate-500">
-            Upload your report, presentation and source code for supervisor review.
+            Upload your report, presentation and source code for supervisor
+            review.
           </p>
         </div>
         <button
@@ -249,7 +299,9 @@ const UploadFiles = () => {
         <div className="rounded-3xl border border-slate-200 bg-white p-14 text-center shadow-sm">
           <FileText className="mx-auto mb-3 text-slate-300" size={38} />
           <p className="font-semibold text-slate-700">No project yet</p>
-          <p className="mt-1 text-sm text-slate-400">Submit a project proposal before uploading files.</p>
+          <p className="mt-1 text-sm text-slate-400">
+            Submit a project proposal before uploading files.
+          </p>
           <Link
             to="/student/submit-proposal"
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700"
@@ -265,17 +317,25 @@ const UploadFiles = () => {
             <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <Lock size={20} className="mt-0.5 shrink-0 text-amber-600" />
               <p className="text-sm text-amber-800">
-                This project is <strong>{project.status}</strong>, so files can no longer be added or deleted.
-                You can still view and download them.
+                This project is <strong>{project.status}</strong>, so files can
+                no longer be added or deleted. You can still view and download
+                them.
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {cards.map(([label, value]) => (
-              <div key={label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">{label}</p>
-                <p className="mt-1 text-2xl font-bold text-slate-800">{value ?? 0}</p>
+              <div
+                key={label}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+                  {label}
+                </p>
+                <p className="mt-1 text-2xl font-bold text-slate-800">
+                  {value ?? 0}
+                </p>
               </div>
             ))}
           </div>
@@ -302,7 +362,9 @@ const UploadFiles = () => {
                   <span className="text-base font-semibold text-slate-700">
                     {dragOver ? "Drop to add files" : "Drag and drop files here"}
                   </span>
-                  <span className="mt-1 text-sm text-slate-500">or click to browse your device</span>
+                  <span className="mt-1 text-sm text-slate-500">
+                    or click to browse your device
+                  </span>
                   <span className="mt-3 text-xs text-slate-400">
                     Up to {MAX_FILES_PER_UPLOAD} files, 10 MB each
                   </span>
@@ -330,7 +392,9 @@ const UploadFiles = () => {
                 {selected.length > 0 && (
                   <div className="mt-5 space-y-2">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-slate-800">Ready to upload</h3>
+                      <h3 className="text-sm font-bold text-slate-800">
+                        Ready to upload
+                      </h3>
                       <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
                         {selected.length} selected
                       </span>
@@ -345,7 +409,9 @@ const UploadFiles = () => {
                           <div className="flex min-w-0 items-center gap-3">
                             <FileTypeIcon name={file.name} />
                             <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-slate-700">{file.name}</p>
+                              <p className="truncate text-sm font-semibold text-slate-700">
+                                {file.name}
+                              </p>
                               <p className="text-xs text-slate-400">
                                 {formatSize(file.size)}
                                 {version > 1 && (
@@ -360,7 +426,11 @@ const UploadFiles = () => {
                             type="button"
                             disabled={uploading}
                             aria-label={`Remove ${file.name}`}
-                            onClick={() => setSelected((prev) => prev.filter((_, i) => i !== index))}
+                            onClick={() =>
+                              setSelected((prev) =>
+                                prev.filter((_, i) => i !== index),
+                              )
+                            }
                             className="rounded-md p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                           >
                             <X className="h-4 w-4" />
@@ -374,7 +444,9 @@ const UploadFiles = () => {
                 {uploading && (
                   <div className="mt-5">
                     <div className="mb-1 flex justify-between text-xs font-semibold text-slate-500">
-                      <span>{progress < 100 ? "Uploading..." : "Finishing up..."}</span>
+                      <span>
+                        {progress < 100 ? "Uploading..." : "Finishing up..."}
+                      </span>
                       <span>{progress}%</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
@@ -393,7 +465,11 @@ const UploadFiles = () => {
                     disabled={!canUpload || selected.length === 0}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                   >
-                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
                     {uploading ? "Uploading..." : "Upload selected files"}
                   </button>
                 </div>
@@ -423,7 +499,10 @@ const UploadFiles = () => {
                 ) : (
                   <div className="divide-y divide-slate-100">
                     {visibleFiles.map((file) => (
-                      <div key={file._id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <div
+                        key={file._id}
+                        className="flex flex-wrap items-center justify-between gap-3 py-3"
+                      >
                         <div className="flex min-w-0 items-center gap-3">
                           <FileTypeIcon name={file.name} />
                           <div className="min-w-0">
@@ -434,16 +513,26 @@ const UploadFiles = () => {
                               </span>
                             </p>
                             <p className="text-xs text-slate-400">
-                              {fileExt(file.name)} · {formatSize(file.fileSize)} · {formatDateTime(file.uploadedAt)}
+                              {fileExt(file.name)} ·{" "}
+                              {formatSize(file.fileSize)} ·{" "}
+                              {formatDateTime(file.uploadedAt)}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <ReviewBadge value={file.reviewStatus} />
-                          <button onClick={() => handleOpen(file, "view")} title="View" className={iconBtn}>
+                          <button
+                            onClick={() => handleOpen(file, "view")}
+                            title="View"
+                            className={iconBtn}
+                          >
                             <Eye size={15} />
                           </button>
-                          <button onClick={() => handleOpen(file, "download")} title="Download" className={iconBtn}>
+                          <button
+                            onClick={() => handleOpen(file, "download")}
+                            title="Download"
+                            className={iconBtn}
+                          >
                             <Download size={15} />
                           </button>
                           {file.reviewStatus === "pending" && !locked ? (
@@ -460,7 +549,10 @@ const UploadFiles = () => {
                               )}
                             </button>
                           ) : (
-                            <span title="Files cannot be deleted after review" className="p-2 text-slate-300">
+                            <span
+                              title="Files cannot be deleted after review"
+                              className="p-2 text-slate-300"
+                            >
                               <Lock size={15} />
                             </span>
                           )}
@@ -474,7 +566,9 @@ const UploadFiles = () => {
 
             <aside className="space-y-5 self-start">
               <Card title="Current project">
-                <p className="break-words text-sm font-semibold leading-6 text-slate-800">{project.title}</p>
+                <p className="break-words text-sm font-semibold leading-6 text-slate-800">
+                  {project.title}
+                </p>
                 <div className="mt-2">
                   <StatusBadge value={project.status} />
                 </div>
@@ -484,18 +578,25 @@ const UploadFiles = () => {
                 <div className="flex items-start gap-3">
                   <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
                   <div>
-                    <h2 className="text-[0.9375rem] font-semibold text-blue-900">File guidelines</h2>
+                    <h2 className="text-[0.9375rem] font-semibold text-blue-900">
+                      File guidelines
+                    </h2>
                     <ul className="mt-3 space-y-2 text-sm text-blue-800">
                       <li>Report: PDF, DOC, DOCX</li>
                       <li>Presentation: PPT, PPTX</li>
                       <li>Source code: ZIP, RAR</li>
-                      <li>Also allowed: JPG, PNG, GIF, TXT, JS, CSS, HTML, JSON</li>
+                      <li>
+                        Also allowed: JPG, PNG, GIF, TXT, JS, CSS, HTML, JSON
+                      </li>
                       <li>Maximum 10 MB per file, 10 files at a time</li>
                       <li>
-                        Uploading a file with the same name saves it as a new version, for example after a
-                        revision request.
+                        Uploading a file with the same name saves it as a new
+                        version, for example after a revision request.
                       </li>
-                      <li>You can delete a file only until your supervisor reviews it.</li>
+                      <li>
+                        You can delete a file only until your supervisor reviews
+                        it.
+                      </li>
                     </ul>
                   </div>
                 </div>

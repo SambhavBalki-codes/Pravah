@@ -1,23 +1,31 @@
+
 import { axiosInstance } from "./axios";
 
-// mode: "view" opens in a new tab, "download" saves the file
-export const openTeacherFile = async ({ projectId, fileId, name, mode }) => {
-  const res = await axiosInstance.get(`/teacher/projects/${projectId}/files/${fileId}`, {
-    responseType: "blob",
-  });
-  const url = URL.createObjectURL(res.data);
+export const openTeacherFile = async ({
+  projectId,
+  fileId,
+  name,
+  mode = "view",
+}) => {
+  const res = await axiosInstance.get(
+    `/teacher/projects/${projectId}/files/${fileId}`
+  );
 
-  if (mode === "view") {
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return;
+  const { fileUrl, originalName } = res.data.data;
+
+  if (!fileUrl) {
+    throw new Error("File URL is missing from the server response");
   }
 
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = name || "file";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  if (mode === "download") {
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = originalName || name || "download";
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } else {
+    window.open(fileUrl, "_blank", "noopener,noreferrer");
+  }
 };

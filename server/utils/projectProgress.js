@@ -1,6 +1,5 @@
 const toPlain = (doc) => (doc && typeof doc.toObject === "function" ? doc.toObject() : doc);
 
-// fileUrl is a server path, so it is never sent to the browser
 export const serializeFile = (file) => {
   const f = toPlain(file);
   return {
@@ -8,6 +7,7 @@ export const serializeFile = (file) => {
     name: f.originalName,
     fileType: f.fileType,
     fileSize: f.fileSize || 0,
+    fileUrl: f.fileUrl || null,
     version: f.version || 1,
     uploadedAt: f.uploadedAt || null,
     reviewStatus: f.reviewStatus || "pending",
@@ -36,7 +36,9 @@ export const serializeFeedback = (fb) => ({
 export const getLastFile = (files = []) =>
   files.reduce(
     (latest, f) =>
-      !latest || new Date(f.uploadedAt || 0) > new Date(latest.uploadedAt || 0) ? f : latest,
+      !latest || new Date(f.uploadedAt || 0) > new Date(latest.uploadedAt || 0)
+        ? f
+        : latest,
     null,
   );
 
@@ -76,7 +78,11 @@ const STUDENT_STEPS = [
 export const getStudentProgress = (project) => {
   if (!project) {
     return {
-      steps: STUDENT_STEPS.map(([key, label]) => ({ key, label, state: "upcoming" })),
+      steps: STUDENT_STEPS.map(([key, label]) => ({
+        key,
+        label,
+        state: "upcoming",
+      })),
       percent: 0,
       rejected: false,
     };
@@ -86,7 +92,12 @@ export const getStudentProgress = (project) => {
   const files = project.files || [];
   const feedbacks = project.feedbacks || [];
   const rejected = status === "rejected";
-  const approved = ["approved", "in_progress", "revision_required", "completed"].includes(status);
+  const approved = [
+    "approved",
+    "in_progress",
+    "revision_required",
+    "completed",
+  ].includes(status);
   const completed = status === "completed";
   const working =
     ["in_progress", "revision_required", "completed"].includes(status) ||
@@ -113,7 +124,9 @@ export const getStudentProgress = (project) => {
       label,
       state: done[i] ? "done" : i === current ? "current" : "upcoming",
     })),
-    percent: Math.round((done.filter(Boolean).length / STUDENT_STEPS.length) * 100),
+    percent: Math.round(
+      (done.filter(Boolean).length / STUDENT_STEPS.length) * 100,
+    ),
     rejected,
   };
 };

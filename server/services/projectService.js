@@ -72,32 +72,37 @@ export const getProjectBySupervisorIdAndProjectId = async (
 };
 
 export const addFilesToProject = async (projectId, files, uploadedBy = null) => {
+  const { uploadToCloudinary } = await import("../utils/cloudinaryHelpers.js");
   const project = await Project.findById(projectId);
 
   if (!project) {
     throw new ErrorHandler("Project not found", 404);
   }
 
-  // A file with the same name as an earlier upload becomes its next version
-  files.forEach((file) => {
-    const sameName = project.files.filter((f) => f.originalName === file.originalname);
+  const uploadPromises = files.map(async (file) => {
+    const result = await uploadToCloudinary(file, `projects/${projectId}`);
+    const sameName = project.files.filter(
+      (f) => f.originalName === file.originalname,
+    );
     const version = sameName.length
       ? Math.max(...sameName.map((f) => f.version || 1)) + 1
       : 1;
 
-    project.files.push({
+    return {
       fileType: file.mimetype,
-      fileUrl: file.path,
+      fileUrl: result.secure_url,
       originalName: file.originalname,
-      storedName: file.filename || "",
+      storedName: result.public_id,
       fileSize: file.size,
       reviewStatus: "pending",
       version,
       uploadedBy,
-    });
+    };
   });
 
-  // First upload starts the work. A re-upload after a revision request resumes it.
+  const uploadedFiles = await Promise.all(uploadPromises);
+  uploadedFiles.forEach((file) => project.files.push(file));
+
   if (["approved", "revision_required"].includes(project.status)) {
     project.status = "in_progress";
   }

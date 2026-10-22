@@ -31,6 +31,7 @@ import {
   getAllProjects,
   getDashboardStats,
 } from "./store/slices/adminSlice";
+import NotFound from "./pages/NotFound";
 
 const App = () => {
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
@@ -143,6 +144,7 @@ const App = () => {
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="notifications" element={<AdminNotifications />} />
         </Route>
+        <Route path="*" element={<NotFound />} />
       </Routes>
 
             <ToastContainer
