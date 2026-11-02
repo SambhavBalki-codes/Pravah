@@ -6,6 +6,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import VisitorLayout from "./components/layout/VisitorLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import SubmitProposal from "./pages/student/SubmitProposal";
 import UploadFiles from "./pages/student/UploadFiles";
@@ -32,6 +33,12 @@ import {
   getDashboardStats,
 } from "./store/slices/adminSlice";
 import NotFound from "./pages/NotFound";
+import VisitorLogin from "./pages/visitor/VisitorLogin";
+import VisitorRegister from "./pages/visitor/VisitorRegister";
+import VisitorGallery from "./pages/visitor/VisitorGallery";
+import VisitorProjectDetail from "./pages/visitor/VisitorProjectDetail";
+import PublicationPage from "./pages/student/PublicationPage";
+import PublicationRequests from "./pages/admin/PublicationRequests";
 
 const App = () => {
   const { authUser, isCheckingAuth } = useSelector((state) => state.auth);
@@ -96,6 +103,20 @@ const App = () => {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/password/reset/:token" element={<ResetPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/visitor/login" element={<VisitorLogin />} />
+        <Route path="/visitor/register" element={<VisitorRegister />} />
+        <Route
+          path="/visitor"
+          element={
+            <ProtectedRoute allowedRoles={["visitor"]}>
+              <VisitorLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="projects" replace />} />
+          <Route path="projects" element={<VisitorGallery />} />
+          <Route path="projects/:id" element={<VisitorProjectDetail />} />
+        </Route>
         <Route
           path="/student"
           element={
@@ -110,6 +131,7 @@ const App = () => {
           <Route path="supervisor" element={<SupervisorPage />} />
           <Route path="feedback" element={<FeedbackPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="publication" element={<PublicationPage />} />
         </Route>
 
         <Route
@@ -143,11 +165,13 @@ const App = () => {
           <Route path="deadlines" element={<DeadlinesPage />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="notifications" element={<AdminNotifications />} />
+          <Route path="publication-requests" element={<PublicationRequests />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
 
             <ToastContainer
+        position="bottom-right"
         theme="dark"
         transition={Slide}
         autoClose={6000}
