@@ -9,8 +9,7 @@
 </div>
 
 <p align="center">
-  <a href="https://pravah-bay-tau.vercel.app">Live application</a> ·
-  <a href="https://pravah-backend-pe55.onrender.com/health">Backend health check</a>
+  <a href="https://pravah-bay-tau.vercel.app">Live application</a>
 </p>
 
 <!-- Add product screenshots here when approved for publication.
