@@ -18,6 +18,11 @@ import {
   updateDeadline,
   toggleDeadline,
   deleteDeadline,
+  updateProjectPublication,
+  getPublicationRequests,
+  getProjectRagStatus,
+  retryProjectRag,
+  deleteProjectRag,
 } from "../controllers/adminController.js";
 import { isAuthenticated, isAuthorized } from "../middlewares/authMiddleware.js";
 import { body, param } from "express-validator";
@@ -65,6 +70,13 @@ router.delete("/delete-teacher/:id", isAuthenticated, isAuthorized("Admin"), use
 router.get("/users", isAuthenticated, isAuthorized("Admin"), getAllUsers);
 
 router.get("/projects", isAuthenticated, isAuthorized("Admin"), getAllProjects);
+
+router.get(
+  "/projects/publication-requests",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  getPublicationRequests,
+);
 
 router.get(
   "/projects/:projectId",
@@ -145,6 +157,44 @@ router.put(
   body("status").isIn(projectStatuses).withMessage("must be a valid project status"),
   validate,
   updateProjectStatus,
+);
+
+router.patch(
+  "/projects/:projectId/publication",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  body("status").isIn(["private", "approved", "rejected"]).withMessage("must be private, approved or rejected"),
+  body("rejectionReason").optional().trim().isLength({ max: 1000 }).withMessage("must not exceed 1000 characters"),
+  validate,
+  updateProjectPublication,
+);
+
+router.get(
+  "/projects/:projectId/rag/status",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  validate,
+  getProjectRagStatus,
+);
+
+router.post(
+  "/projects/:projectId/rag/retry",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  validate,
+  retryProjectRag,
+);
+
+router.delete(
+  "/projects/:projectId/rag",
+  isAuthenticated,
+  isAuthorized("Admin"),
+  param("projectId").isMongoId().withMessage("must be a valid project id"),
+  validate,
+  deleteProjectRag,
 );
 
 export default router;

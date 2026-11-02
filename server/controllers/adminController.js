@@ -11,6 +11,12 @@ import * as notificationService from "../services/notificationService.js";
 import * as assignmentService from "../services/supervisorAssignmentService.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 import { isValidProjectStatusTransition } from "../utils/projectStatus.js";
+import { RagJob } from "../models/ragJob.js";
+import {
+  enqueueRagIndexing,
+  retryRagIndexing,
+} from "../jobs/ragIndexer.js";
+import { deleteProjectVectors } from "../services/ragService.js";
 
 export const createStudent = asyncHandler(async (req, res, next) => {
   const { name, email, password, department } = req.body;
@@ -226,6 +232,7 @@ export const decideProject = asyncHandler(async (req, res, next) => {
   project.status = status;
   project.rejectionReason = status === "rejected" ? rejectionReason.trim() : null;
   await project.save();
+
   await notificationService.notifyUser(
     project.student,
     status === "approved"
@@ -266,6 +273,14 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
     return next(new ErrorHandler("Project not found", 404));
   }
 
+  if (project.status === status) {
+    return res.status(200).json({
+      success: true,
+      message: "Project status is already up to date",
+      data: { project },
+    });
+  }
+
   if (!isValidProjectStatusTransition(project.status, status)) {
     return next(
       new ErrorHandler(
@@ -278,6 +293,19 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
   project.status = status;
   if (status !== "rejected") project.rejectionReason = null;
   await project.save();
+
+  if (status === "completed") {
+    try {
+      await enqueueRagIndexing(project._id);
+    } catch (error) {
+      project.ragStatus = "failed";
+      project.ragError = "RAG indexing could not be queued. An administrator can retry it.";
+      await project.save();
+      console.error(
+        `Could not queue RAG indexing for completed project ${project._id}: ${error.message}`,
+      );
+    }
+  }
 
     await notificationService.safeNotify(() =>
     notificationService.notifyUser(
@@ -295,6 +323,109 @@ export const updateProjectStatus = asyncHandler(async (req, res, next) => {
     success: true,
     message: "Project status updated successfully",
     data: { project },
+  });
+});
+
+export const updateProjectPublication = asyncHandler(async (req, res, next) => {
+  const { projectId } = req.params;
+  const { status, rejectionReason } = req.body;
+  const project = await Project.findById(projectId);
+
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+  if (project.status !== "completed") {
+    return next(new ErrorHandler("Only completed projects can be published", 400));
+  }
+  if (status === "rejected" && !rejectionReason?.trim()) {
+    return next(new ErrorHandler("A rejection reason is required", 400));
+  }
+
+  project.publicationStatus = status;
+  project.isPublic = status === "approved";
+  project.publicationRejectedReason =
+    status === "rejected" ? rejectionReason.trim() : null;
+  if (status === "approved") {
+    project.publishedAt = project.publishedAt || new Date();
+    project.publicationRequestedAt =
+      project.publicationRequestedAt || new Date();
+  } else {
+    project.publishedAt = null;
+  }
+  await project.save();
+
+  if (status === "approved") {
+    await enqueueRagIndexing(project._id);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: `Project publication ${status}`,
+    data: { project },
+  });
+});
+
+export const getPublicationRequests = asyncHandler(async (req, res) => {
+  const projects = await Project.find({
+    status: "completed",
+    publicationStatus: "requested",
+  })
+    .populate("student", "name email department")
+    .populate("supervisor", "name email")
+    .select(
+      "title description department githubUrl completedAt student supervisor files publicationStatus publicationRequestedAt",
+    )
+    .sort({ publicationRequestedAt: 1 })
+    .lean();
+
+  res.status(200).json({
+    success: true,
+    data: { projects },
+  });
+});
+
+export const getProjectRagStatus = asyncHandler(async (req, res, next) => {
+  const project = await Project.findById(req.params.projectId)
+    .select("title status isPublic publicationStatus ragIndexed ragStatus ragError ragIndexedAt")
+    .lean();
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+
+  const job = await RagJob.findOne({ project: project._id })
+    .select("status attempts nextAttemptAt lockedAt lastError updatedAt")
+    .lean();
+
+  res.status(200).json({ success: true, data: { project, job } });
+});
+
+export const retryProjectRag = asyncHandler(async (req, res, next) => {
+  const project = await Project.findById(req.params.projectId).select("status");
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+  if (project.status !== "completed") {
+    return next(new ErrorHandler("Only completed projects can be indexed", 400));
+  }
+
+  await retryRagIndexing(project._id);
+  res.status(202).json({
+    success: true,
+    message: "RAG indexing queued",
+    data: { projectId: project._id, ragStatus: "queued" },
+  });
+});
+
+export const deleteProjectRag = asyncHandler(async (req, res, next) => {
+  const project = await Project.findById(req.params.projectId);
+  if (!project) return next(new ErrorHandler("Project not found", 404));
+
+  await deleteProjectVectors(project._id);
+  await RagJob.deleteOne({ project: project._id });
+  project.ragIndexed = false;
+  project.ragStatus = "not_started";
+  project.ragError = null;
+  project.ragIndexedAt = null;
+  await project.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Project vectors deleted",
+    data: { projectId: project._id, ragStatus: project.ragStatus },
   });
 });
 
@@ -396,7 +527,7 @@ export const updateDeadline = asyncHandler(async (req, res, next) => {
         reminderSentAt: null,
         overdueNotifiedAt: null,
       },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
     if (!updatedDeadline) return next(new ErrorHandler("Deadline not found", 404));
     const deadline = await Deadline.findById(updatedDeadline._id)

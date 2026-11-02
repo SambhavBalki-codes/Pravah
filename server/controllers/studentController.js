@@ -284,7 +284,7 @@ export const cancelSupervisorRequest = asyncHandler(async (req, res, next) => {
   const request = await supervisorRequest.findOneAndUpdate(
     { _id: req.params.id, student: req.user._id, status: "pending" },
     { $set: { status: "cancelled" } },
-    { new: true },
+    { returnDocument: "after" },
   );
   if (!request) return next(new ErrorHandler("Pending request not found", 404));
 

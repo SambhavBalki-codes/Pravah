@@ -5,6 +5,7 @@ import { Project } from "../models/project.js";
 import { supervisorRequest } from "../models/supervisorRequest.js";
 import * as assignmentService from "../services/supervisorAssignmentService.js";
 import * as notificationService from "../services/notificationService.js";
+import { enqueueRagIndexing } from "../jobs/ragIndexer.js";
 import { Deadline } from "../models/deadline.js";
 import { getPagination, getPaginationMeta } from "../utils/pagination.js";
 import {
@@ -112,7 +113,7 @@ export const rejectSupervisorRequest = asyncHandler(async (req, res, next) => {
   const request = await supervisorRequest.findOneAndUpdate(
     { _id: requestId, supervisor: req.user._id, status: "pending" },
     { $set: { status: "rejected", rejectionReason } },
-    { new: true },
+    { returnDocument: "after" },
   );
   if (!request)
     return next(new ErrorHandler("Supervisor request not found", 404));
@@ -604,6 +605,13 @@ export const updateTeacherProjectStatus = asyncHandler(
     if (!project) return next(new ErrorHandler("Project not found", 404));
 
     const nextStatus = req.body.status;
+    if (project.status === nextStatus) {
+      return res.status(200).json({
+        success: true,
+        message: "Project status is already up to date",
+        data: { project },
+      });
+    }
     if (!canTeacherChangeStatus(project.status, nextStatus)) {
       return next(
         new ErrorHandler(
@@ -627,6 +635,19 @@ export const updateTeacherProjectStatus = asyncHandler(
     if (nextStatus === "revision_required")
       project.revisionReason = revisionReason.slice(0, 1000);
     await project.save();
+
+    if (nextStatus === "completed") {
+      try {
+        await enqueueRagIndexing(project._id);
+      } catch (error) {
+        project.ragStatus = "failed";
+        project.ragError = "RAG indexing could not be queued. An administrator can retry it.";
+        await project.save();
+        console.error(
+          `Could not queue RAG indexing for completed project ${project._id}: ${error.message}`,
+        );
+      }
+    }
 
     await notificationService.safeNotify(() =>
       notificationService.notifyUser(

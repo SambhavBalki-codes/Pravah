@@ -9,8 +9,9 @@ import adminRouter from "./router/adminRoutes.js";
 import studentRouter from "./router/studentRoutes.js";
 import notificationRouter from "./router/notificationRoutes.js";
 import teacherRouter from "./router/teacherRoutes.js";
+import visitorRouter from "./router/visitorRoutes.js";
 import { fileURLToPath } from "url";
-import path, { dirname } from "path";
+import path from "path";
 import fs from "fs";
 
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
@@ -40,9 +41,8 @@ if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
 }
 
-
-app.use(cookieParser()); //It allows your backend to read cookies sent by the browser.
-app.use(express.json()); //It parses incoming JSON request bodies and makes the data available in req.body.
+app.use(cookieParser());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/v1/auth", authRouter);
@@ -50,5 +50,7 @@ app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/student", studentRouter);
 app.use("/api/v1/teacher", teacherRouter);
 app.use("/api/v1/notifications", notificationRouter);
+app.use("/api/v1/visitor", visitorRouter);
 app.use(errorMiddleware);
+
 export default app;

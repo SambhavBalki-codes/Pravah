@@ -26,6 +26,7 @@ import {
 import { upload, handleFileUploadErrors } from "../middlewares/upload.js";
 import { body, param } from "express-validator";
 import { validate } from "../middlewares/validation.js";
+import { submitProjectForPublic } from "../controllers/visitorController.js";
 
 const router = express.Router();
 
@@ -34,6 +35,14 @@ router.get(
   isAuthenticated,
   isAuthorized("Student"),
   getStudentProject,
+);
+router.post(
+  "/publication-request",
+  isAuthenticated,
+  isAuthorized("Student"),
+  body("githubUrl").optional({ checkFalsy: true }).trim().isURL().withMessage("must be a valid URL"),
+  validate,
+  submitProjectForPublic,
 );
 router.post(
   "/proposal",

@@ -122,6 +122,52 @@ const projectSchema = new mongoose.Schema(
     approvedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },
     lastActivityAt: { type: Date, default: null },
+    githubUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
+    publicationStatus: {
+      type: String,
+      enum: ["private", "requested", "approved", "rejected"],
+      default: "private",
+    },
+    publicationRequestedAt: {
+      type: Date,
+      default: null,
+    },
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
+    publicationRejectedReason: {
+      type: String,
+      trim: true,
+      maxLength: [1000, "Publication rejection reason cannot exceed 1000 characters"],
+      default: null,
+    },
+    ragIndexed: {
+      type: Boolean,
+      default: false,
+    },
+    ragStatus: {
+      type: String,
+      enum: ["not_started", "queued", "processing", "indexed", "failed"],
+      default: "not_started",
+    },
+    ragError: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    ragIndexedAt: {
+      type: Date,
+      default: null,
+    },
     files: { type: [fileSchema], default: [] },
     feedbacks: { type: [feedbackSchema], default: [] },
     deadline: {
@@ -170,6 +216,8 @@ projectSchema.index({ student: 1, createdAt: -1 });
 projectSchema.index({ supervisor: 1 });
 projectSchema.index({ status: 1 });
 projectSchema.index({ createdAt: -1 });
+projectSchema.index({ isPublic: 1, status: 1 });
+projectSchema.index({ publicationStatus: 1, isPublic: 1, completedAt: -1 });
 projectSchema.index(
   { student: 1 },
   {
