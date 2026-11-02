@@ -1,15 +1,20 @@
 import { connectDB } from "./config/db.js";
 import { startDeadlineReminders } from "./jobs/deadlineReminders.js";
+import { startRagIndexer } from "./jobs/ragIndexer.js";
 import app from "./app.js";
 
-connectDB();
-
 const PORT = process.env.PORT || 4000;
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, async () => {
+  try {
+    await connectDB();
+    startDeadlineReminders();
+    startRagIndexer();
+    console.log(`Server running on port ${PORT}`);
+  } catch (error) {
+    console.error(`Startup failed: ${error.message}`);
+    server.close(() => process.exit(1));
+  }
 });
-
-startDeadlineReminders();
 
 process.on("unhandledRejection", (err) => {
   console.log(`Error: ${err.message}`);

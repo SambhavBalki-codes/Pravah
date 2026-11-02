@@ -31,3 +31,14 @@ export const resetPasswordRateLimiter = createAuthRateLimiter(
   5,
   "Too many password reset attempts. Please try again in 15 minutes.",
 );
+
+export const visitorChatRateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Too many chat requests. Please try again in a minute.",
+  },
+});

@@ -58,6 +58,11 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             path: "/student/notifications",
             icon: "bell",
           },
+          {
+            name: "Public Showcase",
+            path: "/student/publication",
+            icon: "globe",
+          },
         ];
       case "Teacher":
         return [
@@ -95,6 +100,11 @@ const Sidebar = ({ open, setOpen, userRole }) => {
           },
           { name: "Deadlines", path: "/admin/deadlines", icon: "calendar" },
           { name: "Projects", path: "/admin/projects", icon: "folder" },
+          {
+            name: "Publication Requests",
+            path: "/admin/publication-requests",
+            icon: "globe",
+          },
           {
             name: "Notifications",
             path: "/admin/notifications",
@@ -299,6 +309,21 @@ const Sidebar = ({ open, setOpen, userRole }) => {
             <path d="M7.5 3.5v4" />
             <path d="M16.5 3.5v4" />
             <path d="M3.5 9.5h17" />
+          </svg>
+        );
+      case "globe":
+        return (
+          <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="8.5" />
+            <path d="M3.5 12h17M12 3.5c2.2 2.4 3.3 5.2 3.3 8.5S14.2 18.1 12 20.5c-2.2-2.4-3.3-5.2-3.3-8.5S9.8 5.9 12 3.5Z" />
           </svg>
         );
       default:

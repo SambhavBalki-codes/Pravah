@@ -1,9 +1,9 @@
 import backgroundImage from "../../assets/NEW_BACKGROUND.jpg";
 import logoImage from "../../assets/Logo.avif";
 
-const AuthLayout = ({ title, subtitle, children, footer }) => (
+const AuthLayout = ({ title, subtitle, children, footer, topAction }) => (
   <div
-    className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat px-4 py-4 sm:px-6"
+    className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-cover bg-center bg-no-repeat px-4 py-24 sm:px-6 sm:py-16"
     style={{ backgroundImage: `url(${backgroundImage})` }}
   >
     <div className="absolute inset-0 bg-slate-950/25" />
@@ -16,6 +16,9 @@ const AuthLayout = ({ title, subtitle, children, footer }) => (
       className="pointer-events-none absolute -bottom-24 -right-16 h-96 w-96 animate-float-slower rounded-full bg-indigo-400/25 blur-3xl"
       aria-hidden="true"
     />
+    {topAction && (
+      <div className="absolute right-4 top-4 z-20 sm:right-8 sm:top-6">{topAction}</div>
+    )}
 
     <div className="animate-in fade-in relative z-10 w-full max-w-md duration-500">
       <div className="rounded-2xl bg-white/90 px-6 py-5 shadow-2xl backdrop-blur-sm sm:px-9">

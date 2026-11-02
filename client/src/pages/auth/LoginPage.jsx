@@ -52,11 +52,23 @@ const LoginPage = () => {
     if (role === "student") navigate("/student");
     else if (role === "teacher") navigate("/teacher");
     else if (role === "admin") navigate("/admin");
+    else if (role === "visitor") navigate("/visitor/projects");
     else navigate("/login");
   }, [authUser, navigate]);
 
   return (
-    <AuthLayout title="Welcome back" subtitle="Sign in to your Pravah account to continue.">
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your Pravah account to continue."
+      topAction={
+        <Link
+          to="/visitor/login"
+          className="rounded-xl border border-white/70 bg-white/95 px-3 py-2 text-center text-xs font-bold text-indigo-700 shadow-lg shadow-slate-950/15 transition hover:-translate-y-0.5 hover:bg-white hover:text-indigo-800 sm:px-4 sm:py-2.5 sm:text-sm"
+        >
+          Explore as visitor
+        </Link>
+      }
+    >
       <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <fieldset>
           <legend className="mb-1.5 text-sm font-semibold text-slate-700">Sign in as</legend>

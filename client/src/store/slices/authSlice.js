@@ -143,6 +143,7 @@ const authSlice = createSlice({
       })
       .addCase(logout.pending, (state) => {
         state.isCheckingAuth = false;
+        state.authUser = null;
       })
       .addCase(logout.fulfilled, (state) => {
         state.authUser = null;

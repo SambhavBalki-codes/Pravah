@@ -5,7 +5,7 @@ import { logout } from "../../store/slices/authSlice";
 import logoImage from "../../assets/Logo.avif";
 import { fetchUnreadCount } from "../../store/slices/notificationSlice";
 
-const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
+const Navbar = ({ sidebarOpen, setSidebarOpen, showMenu = true }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { authUser } = useSelector((state) => state.auth);
@@ -22,10 +22,14 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
     return () => clearInterval(timer);
   }, [dispatch, hasBell]);
 
-  const handleLogout = () => {
-    dispatch(logout()).then(() => {
-      navigate("/login");
-    });
+  const handleLogout = async () => {
+    setProfileDropdownOpen(false);
+    setNotificationsOpen(false);
+    try {
+      await dispatch(logout()).unwrap();
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
 
   const getInitials = (name) => {
@@ -43,35 +47,37 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {showMenu && (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {sidebarOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                )}
-              </svg>
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {sidebarOpen ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  )}
+                </svg>
+              </button>
+            )}
 
-            <div className="flex items-center ml-4">
+            <div className={`flex items-center ${showMenu ? "ml-4" : ""}`}>
               <div className="flex-shrink-0 flex items-center">
                 <img
                   src={logoImage}
