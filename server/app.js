@@ -23,6 +23,13 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Pravah backend is running",
+  });
+});
+
 app.use(
   cors({
     origin: [process.env.FRONTEND_URL],
