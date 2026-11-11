@@ -8,9 +8,7 @@
   </p>
 </div>
 
-<p align="center">
-  <a href="https://pravah-bay-tau.vercel.app">Live application</a>
-</p>
+
 
 <!-- Add product screenshots here when approved for publication.
 Recommended images:
